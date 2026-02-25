@@ -55,22 +55,15 @@ export function ApplicationForm({ jobId, jobTitle }: ApplicationFormProps) {
       const supabase = createClient();
 
       const { error: insertError } = await supabase
-        .from("applications")
+        .from("job_applications")
         .insert({
           job_id: jobId,
           full_name: formData.full_name,
           email: formData.email,
           phone: formData.phone || null,
-          linkedin_url: formData.linkedin_url || null,
-          portfolio_url: formData.portfolio_url || null,
-          current_company: formData.current_company || null,
-          current_title: formData.current_title || null,
-          years_experience: formData.years_experience
-            ? parseInt(formData.years_experience)
-            : null,
           cover_letter: formData.cover_letter || null,
           resume_url: resumeUrl,
-          status: "new",
+          status: "pending",
         });
 
       if (insertError) {
