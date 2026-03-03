@@ -3,7 +3,7 @@
 import React from "react"
 
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -39,11 +39,11 @@ interface Job {
   featured: boolean;
 }
 
-export default function EditJobPage() {
+export default function EditJobPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const params = useParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [job, setJob] = useState<Job | null>(null);
   const [formData, setFormData] = useState({
     title: "",
@@ -63,37 +63,60 @@ export default function EditJobPage() {
 
   useEffect(() => {
     async function fetchJob() {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from("jobs")
-        .select("*")
-        .eq("id", params.id)
-        .single();
+      try {
+        console.log("[v0] Fetching job with id:", params.id);
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from("jobs")
+          .select("*")
+          .eq("id", params.id)
+          .single();
 
-      if (error || !data) {
+        if (error) {
+          console.error("[v0] Error fetching job:", error);
+          setError("Failed to load job: " + error.message);
+          setLoading(false);
+          return;
+        }
+
+        if (!data) {
+          console.warn("[v0] No job data found for id:", params.id);
+          setError("Job not found");
+          setLoading(false);
+          return;
+        }
+
+        console.log("[v0] Job fetched successfully:", data);
+
+        setJob(data);
+        setFormData({
+          title: data.title || "",
+          location: data.location || "",
+          type: data.type || "full-time",
+          department: data.department || "",
+          level: data.level || "mid",
+          salary_range: data.salary_range || "",
+          description: data.description || "",
+          requirements: Array.isArray(data.requirements) ? data.requirements.join("\n") : "",
+          responsibilities: Array.isArray(data.responsibilities) ? data.responsibilities.join("\n") : "",
+          benefits: Array.isArray(data.benefits) ? data.benefits.join("\n") : "",
+          closing_date: data.closing_date?.split("T")[0] || "",
+          is_active: data.is_active !== false,
+          featured: data.featured !== false,
+        });
+        setLoading(false);
+      } catch (err) {
+        console.error("[v0] Unexpected error fetching job:", err);
         router.push("/setup/jobs");
-        return;
       }
-
-      setJob(data);
-      setFormData({
-        title: data.title,
-        location: data.location,
-        type: data.type,
-        department: data.department || "",
-        level: data.level || "mid",
-        salary_range: data.salary_range || "",
-        description: data.description,
-        requirements: data.requirements?.join("\n") || "",
-        responsibilities: data.responsibilities?.join("\n") || "",
-        benefits: data.benefits?.join("\n") || "",
-        closing_date: data.closing_date?.split("T")[0] || "",
-        is_active: data.is_active,
-        featured: data.featured,
-      });
-      setLoading(false);
     }
-    fetchJob();
+    
+    if (params?.id) {
+      fetchJob();
+    } else {
+      console.warn("[v0] No params.id available");
+      router.push("/setup/jobs");
+    }
   }, [params.id, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -144,7 +167,36 @@ export default function EditJobPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading job details...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Link href="/setup/jobs">
+            <Button variant="ghost" size="icon">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold">Edit Job</h1>
+          </div>
+        </div>
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-6">
+            <p className="text-red-800 font-semibold mb-4">{error}</p>
+            <p className="text-red-700 mb-4">Please try again or go back to the jobs list.</p>
+            <Link href="/setup/jobs">
+              <Button>Back to Jobs</Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     );
   }
