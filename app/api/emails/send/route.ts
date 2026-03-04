@@ -15,6 +15,7 @@ export async function POST(req: NextRequest) {
       inboxId,
       applicantName,
       jobTitle,
+      applicationId,
       fromName = 'UNEDF Team',
       type = 'general'
     } = body;
@@ -81,12 +82,12 @@ export async function POST(req: NextRequest) {
 
                 <div class="section">
                   <div class="section-title">Required Video Interview</div>
-                  <p>Please record a brief video interview answering role-specific questions. You may submit your video using either:</p>
+                  <p>Please record a brief video (3-5 minutes) introducing yourself and explaining why you're interested in this position and how your skills match the role requirements. You may submit your video using either:</p>
                   <div class="requirement">
-                    <div class="requirement-item"><strong>Option 1:</strong> <a href="https://loom.com" target="_blank">Loom.com</a> (Recommended - easy screen recording and upload)</div>
+                    <div class="requirement-item"><strong>Option 1:</strong> <a href="https://loom.com" target="_blank">Loom.com</a> (Recommended - easy recording and upload)</div>
                     <div class="requirement-item"><strong>Option 2:</strong> <a href="https://drive.google.com" target="_blank">Google Drive</a> (Upload video file directly)</div>
                   </div>
-                  <p style="margin-top: 15px;">Once you've recorded your interview, please reply to this email with the link or attachment.</p>
+                  <p style="margin-top: 15px;"><strong>How to submit:</strong> Visit the application portal using the link below to upload your video and documents in one place.</p>
                 </div>
 
                 <div class="section">
@@ -102,6 +103,15 @@ export async function POST(req: NextRequest) {
                     <div class="requirement-item">• Replying to this email with the documents attached</div>
                     <div class="requirement-item">• Uploading to <a href="https://drive.google.com" target="_blank">Google Drive</a> and sharing the link</div>
                   </div>
+                </div>
+
+                <div class="section">
+                  <div class="section-title">Submit Your Application Materials</div>
+                  <p>Please use the secure application portal to submit your video and documents:</p>
+                  <p style="margin: 15px 0; text-align: center;">
+                    <a href="https://www.unoedp.org/apply/${applicationId || '#'}" style="background-color: #1e40af; color: white; padding: 12px 30px; border-radius: 4px; text-decoration: none; display: inline-block; font-weight: 600;">Access Application Portal</a>
+                  </p>
+                  <p>The portal allows you to submit your video interview and required documents securely.</p>
                 </div>
 
                 <div class="deadline">

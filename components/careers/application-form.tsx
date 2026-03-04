@@ -54,7 +54,11 @@ export function ApplicationForm({ jobId, jobTitle }: ApplicationFormProps) {
 
       const supabase = createClient();
 
-      const { error: insertError } = await supabase
+      // Calculate submission deadline (3 days from now)
+      const deadline = new Date();
+      deadline.setDate(deadline.getDate() + 3);
+
+      const { data: insertedData, error: insertError } = await supabase
         .from("job_applications")
         .insert({
           job_id: jobId,
@@ -64,11 +68,15 @@ export function ApplicationForm({ jobId, jobTitle }: ApplicationFormProps) {
           cover_letter: formData.cover_letter || null,
           resume_url: resumeUrl,
           status: "pending",
-        });
+          submission_deadline: deadline.toISOString(),
+        })
+        .select();
 
-      if (insertError) {
-        throw new Error(insertError.message);
+      if (insertError || !insertedData || insertedData.length === 0) {
+        throw new Error(insertError?.message || "Failed to create application");
       }
+
+      const applicationId = insertedData[0].id;
 
       // Send automated confirmation email to applicant
       try {
@@ -82,6 +90,7 @@ export function ApplicationForm({ jobId, jobTitle }: ApplicationFormProps) {
             subject: `Application Confirmation - ${jobTitle} Position`,
             applicantName: formData.full_name,
             jobTitle: jobTitle,
+            applicationId: applicationId,
             type: "application_confirmation",
           }),
         });
