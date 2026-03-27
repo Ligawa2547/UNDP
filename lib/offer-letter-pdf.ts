@@ -53,12 +53,12 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
         <strong>Recognized Training Providers:</strong>
       </p>
       <ul style="font-size: 11px; line-height: 1.8; color: #333; margin-left: 20px; margin-bottom: 15px;">
-        <li><strong>IICAR</strong> (www.iicar.org) - International Institute for Conflict Prevention and Resolution</li>
+        <li><strong>IICAR</strong> (www.iicar.org) - International Institute of Career Advancement and Recognition</li>
         <li><strong>UNSSC</strong> (www.unssc.org) - United Nations System Staff College</li>
         <li>Other accredited first aid certification providers approved by UNEDF</li>
       </ul>
       <p style="font-size: 11px; line-height: 1.6; color: #333;">
-        Proof of completion must be provided to Human Resources within 90 days of the start date. Failure to complete these trainings may result in suspension of employment benefits.
+        Proof of completion must be submitted to Human Resources no later than <strong>${formattedDeadline}</strong> — the same deadline as the acceptance of this offer. Failure to provide proof of completion by this date may result in withdrawal of this offer or suspension of employment benefits.
       </p>
     </section>
   ` : '';
@@ -287,12 +287,21 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
       <div class="container">
         <!-- Header -->
         <div class="header">
-          <div>
-            <div class="logo">UNEDF</div>
-            <div class="logo-subtitle">United Nations Economic Development Foundation</div>
+          <div style="display: flex; align-items: center; gap: 18px;">
+            <img
+              src="/unedf-logo.jpg"
+              alt="UNEDF Logo"
+              style="width: 80px; height: 80px; object-fit: contain; border-radius: 4px;"
+              crossorigin="anonymous"
+            />
+            <div>
+              <div class="logo">UNEDF</div>
+              <div class="logo-subtitle">United Nations Economic Development Foundation</div>
+              <div style="font-size: 10px; color: #888; margin-top: 3px; letter-spacing: 0.3px;">www.unoedp.org</div>
+            </div>
           </div>
           <div class="date-box">
-            <div><strong>OFFER LETTER</strong></div>
+            <div style="font-size: 13px; font-weight: 700; color: #003D7A; letter-spacing: 1px; margin-bottom: 8px;">OFFER LETTER</div>
             <div>Date: ${todayDate}</div>
             <div>Reference: OL-${new Date().getFullYear()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}</div>
           </div>
@@ -402,6 +411,9 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
           <h2>ACCEPTANCE OF OFFER</h2>
           <p>
             Please confirm your acceptance of this offer by signing the electronic signature form and submitting it before <strong>${formattedDeadline}</strong>. If we do not receive your signed acceptance by this date, we may withdraw the offer and offer the position to another candidate.
+          </p>
+          <p>
+            Please note that the deadline for submitting any required documentation — including proof of training certifications, educational credentials, and other pre-employment requirements — is also <strong>${formattedDeadline}</strong>, coinciding with the acceptance deadline.
           </p>
           <p>
             If you have any questions regarding this offer, please do not hesitate to contact our Human Resources department at <strong>careers@unoedp.org</strong>.
