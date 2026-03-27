@@ -493,55 +493,76 @@ export async function generatePDF(html: string, filename: string): Promise<void>
   const html2pdf = (await import('html2pdf.js')).default;
   
   return new Promise((resolve, reject) => {
-    const element = document.createElement('div');
+    // Create an iframe to isolate the PDF content from page styles
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.left = '-9999px';
+    iframe.style.top = '-9999px';
+    iframe.style.width = '210mm'; // A4 width
+    iframe.style.height = '297mm'; // A4 height
+    iframe.style.border = 'none';
     
-    // Strip out any <style> tags that might contain Tailwind CSS with modern color functions
-    const cleanHtml = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-    element.innerHTML = cleanHtml;
+    document.body.appendChild(iframe);
+    
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+    if (!iframeDoc) {
+      document.body.removeChild(iframe);
+      reject(new Error('Failed to create isolated document for PDF'));
+      return;
+    }
+    
+    // Write the HTML directly to the iframe - this isolates it from page CSS
+    iframeDoc.open();
+    iframeDoc.write(html);
+    iframeDoc.close();
 
-    const options = {
-      margin: [15, 15, 15, 15],
-      filename: filename,
-      image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { 
-        scale: 2, 
-        useCORS: true, 
-        allowTaint: true,
-        logging: false,
-        backgroundColor: '#ffffff',
-        removeContainer: true,
-        foreignObjectRendering: false
-      },
-      jsPDF: { 
-        unit: 'mm', 
-        format: 'a4', 
-        orientation: 'portrait',
-        compress: false
-      },
-      pagebreak: { 
-        mode: 'avoid-all',
-        before: [],
-        after: [],
-        avoid: []
-      }
-    };
+    // Wait for images to load
+    const images = iframeDoc.querySelectorAll('img');
+    const imagePromises = Array.from(images).map((img) => {
+      if (img.complete) return Promise.resolve();
+      return new Promise<void>((res) => {
+        img.onload = () => res();
+        img.onerror = () => res(); // Continue even if image fails
+      });
+    });
 
-    try {
+    Promise.all(imagePromises).then(() => {
+      const options = {
+        margin: [10, 10, 10, 10],
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true, 
+          allowTaint: true,
+          logging: false,
+          backgroundColor: '#ffffff'
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'portrait'
+        },
+        pagebreak: { 
+          mode: 'avoid-all'
+        }
+      };
+
       html2pdf()
         .set(options)
-        .from(element)
+        .from(iframeDoc.body)
         .save()
         .then(() => {
-          console.log('[v0] PDF generated successfully:', filename);
+          document.body.removeChild(iframe);
           resolve();
         })
         .catch((error: any) => {
-          console.error('[v0] PDF generation error:', error);
+          document.body.removeChild(iframe);
           reject(new Error(`Failed to generate PDF: ${error?.message || 'Unknown error'}`));
         });
-    } catch (error: any) {
-      console.error('[v0] PDF generation exception:', error);
-      reject(new Error(`Failed to generate PDF: ${error?.message || 'Unknown error'}`));
-    }
+    }).catch((error: any) => {
+      document.body.removeChild(iframe);
+      reject(new Error(`Failed to load images: ${error?.message || 'Unknown error'}`));
+    });
   });
 }
