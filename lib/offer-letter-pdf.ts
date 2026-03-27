@@ -493,7 +493,7 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
 
 
 
-export async function generatePDF(html: string, filename: string): Promise<Blob> {
+export async function generatePDF(html: string, filename: string): Promise<void> {
   // Dynamic import to ensure html2pdf only loads in browser
   const html2pdf = (await import('html2pdf.js')).default;
   
@@ -510,7 +510,8 @@ export async function generatePDF(html: string, filename: string): Promise<Blob>
         useCORS: true, 
         allowTaint: true,
         logging: false,
-        backgroundColor: '#ffffff'
+        backgroundColor: '#ffffff',
+        removeContainer: true
       },
       jsPDF: { 
         unit: 'mm', 
@@ -526,16 +527,22 @@ export async function generatePDF(html: string, filename: string): Promise<Blob>
       }
     };
 
-    html2pdf()
-      .set(options)
-      .from(element)
-      .save()
-      .then(() => {
-        resolve(new Blob([], { type: 'application/pdf' }));
-      })
-      .catch((error: any) => {
-        console.error('[v0] PDF generation error:', error);
-        reject(error);
-      });
+    try {
+      html2pdf()
+        .set(options)
+        .from(element)
+        .save()
+        .then(() => {
+          console.log('[v0] PDF generated successfully:', filename);
+          resolve();
+        })
+        .catch((error: any) => {
+          console.error('[v0] PDF generation error:', error);
+          reject(new Error(`Failed to generate PDF: ${error?.message || 'Unknown error'}`));
+        });
+    } catch (error: any) {
+      console.error('[v0] PDF generation exception:', error);
+      reject(new Error(`Failed to generate PDF: ${error?.message || 'Unknown error'}`));
+    }
   });
 }

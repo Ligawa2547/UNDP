@@ -197,11 +197,13 @@ export default function OfferSignaturePage() {
 
       const filename = `offer-letter-${letter.job_title.replace(/\s+/g, '-')}.pdf`;
       await generatePDF(html, filename);
+      
+      setDownloading(false);
+      alert('PDF downloaded successfully');
     } catch (error) {
       console.error('[v0] Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
-    } finally {
       setDownloading(false);
+      alert(`Error generating PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

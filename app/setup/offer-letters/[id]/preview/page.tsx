@@ -24,9 +24,10 @@ export default function PreviewPage() {
     setDownloading(true);
     try {
       await generatePDF(html, `offer-letter-${params.id}.pdf`);
+      alert('PDF downloaded successfully');
     } catch (error) {
       console.error('[v0] Error generating PDF:', error);
-      alert('Error generating PDF. Please try again.');
+      alert(`Error generating PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setDownloading(false);
     }
