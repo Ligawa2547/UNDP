@@ -8,8 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Download, Check } from "lucide-react";
-import { generateOfferLetterHTML, generatePDF } from "@/lib/offer-letter-pdf";
+import { Loader2, Download, Check, Printer } from "lucide-react";
+import { generateOfferLetterHTML, generatePDF, printOfferLetter } from "@/lib/offer-letter-pdf";
 
 interface OfferLetter {
   id: string;
@@ -172,6 +172,25 @@ export default function OfferSignaturePage() {
       ctx.closePath();
     }
     setIsDrawing(false);
+  };
+
+  const handlePrint = () => {
+    if (!letter) return;
+    const html = generateOfferLetterHTML({
+      applicantName: letter.applicant_name,
+      applicantEmail: letter.applicant_email,
+      jobTitle: letter.job_title,
+      reportingStation: letter.reporting_station,
+      contractType: letter.contract_type,
+      gradeLevel: letter.grade_level,
+      expectedStartDate: letter.expected_start_date,
+      contractDuration: letter.contract_duration,
+      acceptanceDeadline: letter.acceptance_deadline,
+      salaryNotes: letter.salary_notes,
+      customClauses: letter.custom_clauses,
+      includeSsafeIfak: letter.include_ssafe_ifak,
+    }, false);
+    printOfferLetter(html);
   };
 
   const handleDownload = async () => {
@@ -370,12 +389,16 @@ export default function OfferSignaturePage() {
               </CardContent>
             </Card>
 
-{letter.allow_download_unsigned && (
-<Button onClick={handleDownload} variant="outline" className="w-full mt-4" disabled={downloading}>
-{downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-{downloading ? 'Generating PDF...' : 'Download PDF'}
-</Button>
-            )}
+  <Button onClick={handlePrint} variant="outline" className="w-full mt-4">
+    <Printer className="h-4 w-4 mr-2" />
+    Print / Save as PDF
+  </Button>
+  {letter.allow_download_unsigned && (
+  <Button onClick={handleDownload} variant="outline" className="w-full mt-2" disabled={downloading}>
+  {downloading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+  {downloading ? 'Generating PDF...' : 'Download PDF'}
+  </Button>
+  )}
           </div>
 
           {/* Main Content */}

@@ -276,12 +276,17 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
         }
         @page {
           size: A4;
-          margin: 15mm;
+          margin: 15mm 15mm 20mm 15mm;
         }
         @media print {
           body {
             margin: 0;
             padding: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .no-print {
+            display: none !important;
           }
           .container {
             max-width: 100%;
@@ -291,25 +296,15 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
           .letter-body {
             padding: 0 0 40px 0;
           }
-          h1 {
+          h1, h2, h3 {
             page-break-after: avoid;
-            orphans: 3;
-            widows: 3;
           }
           h2 {
-            page-break-after: avoid;
-            orphans: 3;
-            widows: 3;
             margin-top: 0;
           }
-          h3 {
-            page-break-after: avoid;
+          p {
             orphans: 3;
             widows: 3;
-          }
-          p {
-            orphans: 2;
-            widows: 2;
           }
           section {
             page-break-inside: avoid;
@@ -321,9 +316,6 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
             page-break-inside: avoid;
           }
           ul, ol {
-            page-break-inside: avoid;
-          }
-          li {
             page-break-inside: avoid;
           }
         }
@@ -487,6 +479,27 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
 }
 
 
+
+export function printOfferLetter(html: string): void {
+  // Open a new window with the offer letter HTML and trigger print
+  const printWindow = window.open('', '_blank', 'width=900,height=700');
+  if (!printWindow) {
+    alert('Please allow pop-ups to print the offer letter.');
+    return;
+  }
+
+  printWindow.document.open();
+  printWindow.document.write(html);
+  printWindow.document.close();
+
+  // Wait for images and fonts to load then trigger print dialog
+  printWindow.onload = () => {
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 500);
+  };
+}
 
 export async function generatePDF(html: string, filename: string): Promise<void> {
   // Dynamic import to ensure html2pdf only loads in browser
