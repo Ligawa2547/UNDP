@@ -276,37 +276,59 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
         }
         @page {
           size: A4;
-          margin: 20mm;
-          @bottom-center {
-            content: "Page " counter(page) " of " counter(pages);
-            font-size: 9pt;
-            color: #999;
-          }
+          margin: 15mm;
         }
         @media print {
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
           body {
             margin: 0;
             padding: 0;
-            orphans: 2;
-            widows: 2;
           }
           .container {
-            padding: 0;
             max-width: 100%;
+            padding: 0;
+            margin: 0;
           }
-          h1, h2, h3 {
+          .letter-body {
+            padding: 0 0 40px 0;
+          }
+          h1 {
             page-break-after: avoid;
+            orphans: 3;
+            widows: 3;
+          }
+          h2 {
+            page-break-after: avoid;
+            orphans: 3;
+            widows: 3;
+            margin-top: 0;
+          }
+          h3 {
+            page-break-after: avoid;
+            orphans: 3;
+            widows: 3;
+          }
+          p {
+            orphans: 2;
+            widows: 2;
           }
           section {
             page-break-inside: avoid;
           }
-          p, li {
+          table {
             page-break-inside: avoid;
           }
-          .details-table {
+          tr {
             page-break-inside: avoid;
           }
-          .opening-paragraph {
+          ul, ol {
+            page-break-inside: avoid;
+          }
+          li {
             page-break-inside: avoid;
           }
         }
@@ -480,22 +502,39 @@ export async function generatePDF(html: string, filename: string): Promise<Blob>
     element.innerHTML = html;
 
     const options = {
-      margin: 0,
+      margin: [15, 15, 15, 15], // 15mm margins: top, left, bottom, right
       filename: filename,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, allowTaint: true },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-      pagebreak: { mode: ['css', 'legacy'], avoid: ['h2', 'h3', 'section'] }
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        allowTaint: true,
+        logging: false,
+        backgroundColor: '#ffffff'
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait',
+        compress: true
+      },
+      pagebreak: { 
+        mode: 'avoid-all', // Automatically handles pagination
+        before: [],
+        after: [],
+        avoid: []
+      }
     };
 
     html2pdf()
       .set(options)
       .from(element)
-      .outputPdf('blob')
-      .then((pdf: Blob) => {
-        resolve(pdf);
+      .save()
+      .then(() => {
+        resolve(new Blob([], { type: 'application/pdf' }));
       })
       .catch((error: any) => {
+        console.error('[v0] PDF generation error:', error);
         reject(error);
       });
   });
