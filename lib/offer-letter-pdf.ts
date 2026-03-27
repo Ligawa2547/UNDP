@@ -154,67 +154,91 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
         body {
           font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
           line-height: 1.6;
-          color: #1a1a1a;
+          color: #2c3e50;
           background-color: #fff;
+          font-size: 11pt;
         }
         .container {
           max-width: 850px;
           margin: 0 auto;
-          padding: 0 0 40px 0;
+          padding: 0;
           background-color: white;
         }
         .letter-body {
-          padding: 0 40px;
+          padding: 0 40px 40px 40px;
         }
         h1, h2, h3 {
           color: #003D7A;
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          font-weight: 700;
         }
         h1 {
-          font-size: 18px;
-          font-weight: 700;
-          margin-bottom: 5px;
+          font-size: 18pt;
+          margin-bottom: 8px;
+          margin-top: 0;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
         }
         h2 {
-          font-size: 16px;
-          font-weight: 700;
-          margin-top: 30px;
-          margin-bottom: 15px;
+          font-size: 14pt;
+          margin-top: 24px;
+          margin-bottom: 12px;
           border-bottom: 2px solid #003D7A;
-          padding-bottom: 10px;
+          padding-bottom: 8px;
+          page-break-after: avoid;
+        }
+        h3 {
+          font-size: 12pt;
+          margin-top: 16px;
+          margin-bottom: 10px;
+          font-weight: 600;
+          page-break-after: avoid;
         }
         .letter-content {
-          margin-bottom: 30px;
+          margin-bottom: 20px;
         }
         .letter-content p {
-          font-size: 12px;
+          font-size: 11pt;
           line-height: 1.8;
-          color: #333;
-          margin-bottom: 15px;
+          color: #2c3e50;
+          margin-bottom: 12px;
           text-align: justify;
         }
         .salutation {
-          font-size: 12px;
-          margin-bottom: 20px;
-          color: #333;
+          font-size: 11pt;
+          margin-bottom: 16px;
+          color: #2c3e50;
+          font-weight: 500;
         }
         .opening-paragraph {
-          background-color: #f9fafb;
-          padding: 15px;
+          background-color: #f0f4f8;
+          padding: 14px;
           border-left: 4px solid #003D7A;
-          margin-bottom: 20px;
+          margin-bottom: 16px;
           font-weight: 500;
+          font-size: 11pt;
+          line-height: 1.7;
+          page-break-inside: avoid;
+        }
+        .opening-paragraph p {
+          margin-bottom: 0;
+          font-size: 11pt;
         }
         .details-table {
           width: 100%;
           border-collapse: collapse;
           margin-bottom: 20px;
-          font-size: 11px;
+          font-size: 10pt;
+          page-break-inside: avoid;
         }
         .details-table tr {
           border-bottom: 1px solid #ddd;
         }
+        .details-table tr:hover {
+          background-color: #f9fafb;
+        }
         .details-table td {
-          padding: 12px;
+          padding: 10px 12px;
           vertical-align: top;
         }
         .details-table td:first-child {
@@ -225,34 +249,64 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
         }
         .details-table td:last-child {
           width: 65%;
-          color: #333;
+          color: #2c3e50;
+          font-size: 10pt;
         }
         ul, ol {
-          margin-left: 25px;
-          font-size: 11px;
-          line-height: 1.8;
-          color: #333;
-          margin-bottom: 15px;
+          margin-left: 24px;
+          font-size: 11pt;
+          line-height: 1.7;
+          color: #2c3e50;
+          margin-bottom: 14px;
         }
         li {
-          margin-bottom: 8px;
+          margin-bottom: 6px;
         }
         section {
-          margin-bottom: 30px;
+          margin-bottom: 24px;
+          page-break-inside: avoid;
+        }
+        strong {
+          color: #1a1a1a;
+          font-weight: 600;
+        }
+        em {
+          font-style: italic;
+          color: #555;
+        }
+        @page {
+          size: A4;
+          margin: 20mm;
+          @bottom-center {
+            content: "Page " counter(page) " of " counter(pages);
+            font-size: 9pt;
+            color: #999;
+          }
         }
         @media print {
           body {
             margin: 0;
             padding: 0;
+            orphans: 2;
+            widows: 2;
           }
           .container {
-            padding: 30px;
+            padding: 0;
             max-width: 100%;
           }
-          h2 {
+          h1, h2, h3 {
             page-break-after: avoid;
           }
           section {
+            page-break-inside: avoid;
+          }
+          p, li {
+            page-break-inside: avoid;
+          }
+          .details-table {
+            page-break-inside: avoid;
+          }
+          .opening-paragraph {
             page-break-inside: avoid;
           }
         }
