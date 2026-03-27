@@ -1,4 +1,4 @@
-import html2pdf from 'html2pdf.js';
+'use client';
 
 export interface OfferLetterData {
   applicantName: string;
@@ -422,7 +422,12 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
   `;
 }
 
+
+
 export async function generatePDF(html: string, filename: string): Promise<Blob> {
+  // Dynamic import to ensure html2pdf only loads in browser
+  const html2pdf = (await import('html2pdf.js')).default;
+  
   return new Promise((resolve, reject) => {
     const element = document.createElement('div');
     element.innerHTML = html;
