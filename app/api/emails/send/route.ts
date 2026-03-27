@@ -204,6 +204,187 @@ United Nations Economic Development Foundation
       `;
     }
 
+    // Handle offer letter sent type
+    if (type === 'offer_letter_sent') {
+      const { signatureToken, offerLetterId } = body;
+      const signingLink = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://unoedp.org'}/offer/${signatureToken}`;
+      
+      htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { border-bottom: 3px solid #003D7A; padding-bottom: 20px; margin-bottom: 30px; }
+              .logo { font-size: 24px; font-weight: bold; color: #003D7A; margin-bottom: 5px; }
+              .content { margin-bottom: 30px; }
+              .highlight-box { background-color: #f0f4f8; border-left: 4px solid #003D7A; padding: 15px; margin: 20px 0; }
+              .deadline { background-color: #fef3c7; border-left: 4px solid #d97706; padding: 15px; margin: 20px 0; }
+              .button { display: inline-block; background-color: #003D7A; color: white; padding: 12px 30px; text-decoration: none; border-radius: 4px; margin: 20px 0; font-weight: 600; }
+              .button:hover { background-color: #002850; }
+              .footer { background-color: #f9fafb; padding: 20px; border-top: 1px solid #e5e7eb; margin-top: 30px; font-size: 12px; color: #666; }
+              a { color: #003D7A; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="logo">UNEDF</div>
+                <div style="font-size: 12px; color: #666;">United Nations Economic Development Foundation</div>
+              </div>
+
+              <div class="content">
+                <p>Dear ${applicantName},</p>
+
+                <div class="highlight-box">
+                  <strong>Employment Offer Letter Received</strong><br/>
+                  We are pleased to offer you the position of <strong>${jobTitle}</strong> at UNEDF. Please review your offer letter and accept it by signing electronically below.
+                </div>
+
+                <h3>Next Steps</h3>
+                <p>To review and accept your offer letter, please click the button below to access your secure signing portal:</p>
+
+                <center>
+                  <a href="${signingLink}" class="button">Review & Sign Offer Letter</a>
+                </center>
+
+                <p>Or copy and paste this link in your browser:<br/>
+                <code style="background-color: #f3f4f6; padding: 10px; display: block; word-break: break-all; font-size: 12px;">${signingLink}</code>
+                </p>
+
+                <div class="deadline">
+                  <strong>Important: Acceptance Deadline</strong><br/>
+                  Please sign and accept this offer letter by the deadline shown in your personalized offer document. Once you accept, please download and retain a copy for your records.
+                </div>
+
+                <h3>What to Expect</h3>
+                <ul>
+                  <li>Review the complete terms and conditions of your employment</li>
+                  <li>Sign electronically using your typed signature or by drawing your signature</li>
+                  <li>Receive immediate confirmation of your acceptance</li>
+                  <li>Get a copy of the signed offer letter via email</li>
+                </ul>
+
+                <p>If you have any questions or concerns about your offer, please contact our Human Resources team at <a href="mailto:careers@unoedp.org">careers@unoedp.org</a>.</p>
+
+                <p>We look forward to welcoming you to the UNEDF team!</p>
+
+                <p>Best regards,<br/>
+                <strong>UNEDF Human Resources Team</strong><br/>
+                United Nations Economic Development Foundation</p>
+              </div>
+
+              <div class="footer">
+                <p><strong>UNEDF | Employment</strong></p>
+                <p>This is an official employment offer. The link above will expire in 10 days. Please act promptly to accept your offer.</p>
+                <p style="margin-top: 10px; border-top: 1px solid #d1d5db; padding-top: 10px;">© ${new Date().getFullYear()} United Nations Economic Development Foundation. All rights reserved.</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      textContent = `
+Employment Offer Letter
+
+Dear ${applicantName},
+
+We are pleased to offer you the position of ${jobTitle} at UNEDF.
+
+REVIEW AND SIGN YOUR OFFER LETTER:
+
+Click the link below to access your secure signing portal and review your complete offer letter:
+
+${signingLink}
+
+Please sign and accept your offer letter by the deadline shown in your personalized offer document.
+
+If you have any questions, contact: careers@unoedp.org
+
+Best regards,
+UNEDF Human Resources Team
+United Nations Economic Development Foundation
+      `;
+    }
+
+    // Handle offer letter signed (confirmation)
+    if (type === 'offer_letter_signed') {
+      htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { border-bottom: 3px solid #003D7A; padding-bottom: 20px; margin-bottom: 30px; }
+              .logo { font-size: 24px; font-weight: bold; color: #003D7A; margin-bottom: 5px; }
+              .success-box { background-color: #d1fae5; border-left: 4px solid #059669; padding: 15px; margin: 20px 0; border-radius: 4px; }
+              .success-box p { color: #065f46; margin: 0; }
+              .footer { background-color: #f9fafb; padding: 20px; border-top: 1px solid #e5e7eb; margin-top: 30px; font-size: 12px; color: #666; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="logo">UNEDF</div>
+                <div style="font-size: 12px; color: #666;">United Nations Economic Development Foundation</div>
+              </div>
+
+              <div class="content">
+                <p>Dear ${applicantName},</p>
+
+                <div class="success-box">
+                  <p><strong>✓ Offer Accepted</strong><br/>
+                  Your employment offer for the position of <strong>${jobTitle}</strong> has been successfully signed and accepted.</p>
+                </div>
+
+                <h3>What Happens Next</h3>
+                <p>Our Human Resources team will be in touch shortly to provide you with:</p>
+                <ul>
+                  <li>Final employment documentation</li>
+                  <li>Pre-employment requirements and onboarding information</li>
+                  <li>Start date confirmation and next steps</li>
+                  <li>Contact information for your direct supervisor</li>
+                </ul>
+
+                <p>A signed copy of your offer letter has been saved and you can download it from your applicant portal.</p>
+
+                <p>Welcome to UNEDF! We're excited to have you join our team.</p>
+
+                <p>Best regards,<br/>
+                <strong>UNEDF Human Resources Team</strong><br/>
+                United Nations Economic Development Foundation</p>
+              </div>
+
+              <div class="footer">
+                <p><strong>UNEDF | Employment</strong></p>
+                <p>© ${new Date().getFullYear()} United Nations Economic Development Foundation. All rights reserved.</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      textContent = `
+Offer Letter Acceptance Confirmed
+
+Dear ${applicantName},
+
+Your employment offer for the position of ${jobTitle} has been successfully signed and accepted.
+
+Our Human Resources team will be in touch shortly with next steps and onboarding information.
+
+Welcome to UNEDF!
+
+Best regards,
+UNEDF Human Resources Team
+United Nations Economic Development Foundation
+      `;
+    }
+
     // Handle admin_compose type (custom from name)
     if (type === 'admin_compose') {
       htmlContent = htmlBody || `<p>${emailBody}</p>`;
