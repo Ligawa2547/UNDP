@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ArrowLeft, Loader2, Send, Download, Eye, Copy, Trash2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Loader2, Send, Download, Eye, Copy, Trash2, RefreshCw, X } from "lucide-react";
 import Link from "next/link";
 
 interface OfferLetter {
@@ -169,6 +169,50 @@ export default function OfferLetterDetailPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!window.confirm('Are you sure you want to delete this offer letter? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("offer_letters")
+        .delete()
+        .eq("id", params.id as string);
+
+      if (error) throw error;
+
+      alert('Offer letter deleted successfully');
+      router.push('/setup/offer-letters');
+    } catch (error) {
+      console.error('[v0] Error deleting:', error);
+      alert('Error deleting offer letter');
+    }
+  };
+
+  const handleRevoke = async () => {
+    if (!window.confirm('Are you sure you want to revoke this offer letter? The applicant will no longer be able to access or sign it.')) {
+      return;
+    }
+
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from("offer_letters")
+        .update({ status: 'voided', token_expires_at: new Date().toISOString() })
+        .eq("id", params.id as string);
+
+      if (error) throw error;
+
+      alert('Offer letter revoked successfully');
+      window.location.reload();
+    } catch (error) {
+      console.error('[v0] Error revoking:', error);
+      alert('Error revoking offer letter');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -231,6 +275,24 @@ export default function OfferLetterDetailPage() {
           onClick={() => setEditing(!editing)}
         >
           {editing ? 'Cancel Edit' : 'Edit'}
+        </Button>
+        {letter.status !== 'voided' && letter.status !== 'draft' && (
+          <Button 
+            variant="outline"
+            onClick={handleRevoke}
+            className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+          >
+            <X className="mr-2 h-4 w-4" />
+            Revoke
+          </Button>
+        )}
+        <Button 
+          variant="outline"
+          onClick={handleDelete}
+          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          Delete
         </Button>
       </div>
 

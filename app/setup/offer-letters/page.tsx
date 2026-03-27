@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FileCheck, Plus, Eye, Send, Download, Trash2, Copy, Clock } from "lucide-react";
+import { FileCheck, Plus, Eye, Send, Download, Trash2, Copy, Clock, X } from "lucide-react";
 import Link from "next/link";
 
 const statusColors: Record<string, string> = {
@@ -148,6 +148,42 @@ export default function OfferLettersPage() {
     }
   };
 
+  const handleDelete = async (letterId: string) => {
+    if (!window.confirm('Are you sure you want to delete this offer letter? This action cannot be undone.')) {
+      return;
+    }
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("offer_letters")
+      .delete()
+      .eq("id", letterId);
+
+    if (error) {
+      alert('Error deleting offer letter');
+    } else {
+      window.location.reload();
+    }
+  };
+
+  const handleRevoke = async (letterId: string) => {
+    if (!window.confirm('Are you sure you want to revoke this offer letter? The applicant will no longer be able to access or sign it.')) {
+      return;
+    }
+
+    const supabase = createClient();
+    const { error } = await supabase
+      .from("offer_letters")
+      .update({ status: 'voided', token_expires_at: new Date().toISOString() })
+      .eq("id", letterId);
+
+    if (error) {
+      alert('Error revoking offer letter');
+    } else {
+      window.location.reload();
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -265,7 +301,7 @@ export default function OfferLettersPage() {
                         {new Date(letter.created_at).toLocaleDateString()}
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
+                        <div className="flex gap-1 flex-wrap">
                           <Link href={`/setup/offer-letters/${letter.id}`}>
                             <Button variant="outline" size="sm" title="Edit">
                               <Eye className="h-4 w-4" />
@@ -295,6 +331,26 @@ export default function OfferLettersPage() {
                             onClick={() => handleDuplicate(letter.id)}
                           >
                             <Copy className="h-4 w-4" />
+                          </Button>
+                          {letter.status !== 'voided' && letter.status !== 'draft' && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              title="Revoke"
+                              onClick={() => handleRevoke(letter.id)}
+                              className="text-orange-600 hover:text-orange-700"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            title="Delete"
+                            onClick={() => handleDelete(letter.id)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
                       </TableCell>
