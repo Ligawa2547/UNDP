@@ -52,13 +52,10 @@ interface Application {
 }
 
 const statusColors: Record<string, string> = {
-  new: "bg-blue-100 text-blue-800",
+  pending: "bg-blue-100 text-blue-800",
   reviewing: "bg-yellow-100 text-yellow-800",
-  shortlisted: "bg-purple-100 text-purple-800",
-  interview: "bg-cyan-100 text-cyan-800",
-  offered: "bg-green-100 text-green-800",
+  accepted: "bg-green-100 text-green-800",
   rejected: "bg-red-100 text-red-800",
-  withdrawn: "bg-gray-100 text-gray-800",
 };
 
 export default function ApplicationDetailPage() {
@@ -67,7 +64,7 @@ export default function ApplicationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [application, setApplication] = useState<Application | null>(null);
-  const [status, setStatus] = useState("new");
+  const [status, setStatus] = useState("pending");
   const [adminNotes, setAdminNotes] = useState("");
 
   useEffect(() => {
@@ -336,13 +333,10 @@ export default function ApplicationDetailPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="new">New</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="reviewing">Reviewing</SelectItem>
-                    <SelectItem value="shortlisted">Shortlisted</SelectItem>
-                    <SelectItem value="interview">Interview</SelectItem>
-                    <SelectItem value="offered">Offered</SelectItem>
+                    <SelectItem value="accepted">Accepted</SelectItem>
                     <SelectItem value="rejected">Rejected</SelectItem>
-                    <SelectItem value="withdrawn">Withdrawn</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
