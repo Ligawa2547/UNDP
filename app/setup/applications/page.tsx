@@ -31,7 +31,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
-import { ClipboardList, Eye, Mail, ExternalLink, RefreshCw, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ClipboardList, Eye, Mail, ExternalLink, RefreshCw, AlertTriangle, CheckCircle2, Bell, Send, Loader2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 
 const statusColors: Record<string, string> = {
@@ -150,6 +151,18 @@ export default function ApplicationsPage() {
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [bulkResult, setBulkResult] = useState<{ count: number; success: boolean } | null>(null);
 
+  // Reminder state
+  const [reminderPeriodType, setReminderPeriodType] = useState('last7');
+  const [reminderPeriodValue, setReminderPeriodValue] = useState('');
+  const [reminderRangeFrom, setReminderRangeFrom] = useState('');
+  const [reminderRangeTo, setReminderRangeTo] = useState('');
+  const [reminderFromStatus, setReminderFromStatus] = useState('pending');
+  const [reminderDeadlineDays, setReminderDeadlineDays] = useState('3');
+  const [reminderCustomMessage, setReminderCustomMessage] = useState('');
+  const [reminderConfirmOpen, setReminderConfirmOpen] = useState(false);
+  const [reminderSending, setReminderSending] = useState(false);
+  const [reminderResult, setReminderResult] = useState<{ sent: number; failed: number; success: boolean } | null>(null);
+
   useEffect(() => {
     fetchApplications();
   }, []);
@@ -190,6 +203,75 @@ export default function ApplicationsPage() {
       return inPeriod && matchesFromStatus;
     });
   }, [applications, bulkPeriodType, bulkPeriodValue, bulkRangeFrom, bulkRangeTo, bulkFromStatus]);
+
+  // Derive matching applications for reminders
+  const reminderMatchedApplications = useMemo(() => {
+    let range: { from: Date; to: Date } | null = null;
+
+    if (reminderPeriodType === 'range') {
+      if (reminderRangeFrom && reminderRangeTo) {
+        const from = new Date(reminderRangeFrom);
+        from.setHours(0, 0, 0, 0);
+        const to = new Date(reminderRangeTo);
+        to.setHours(23, 59, 59, 999);
+        range = { from, to };
+      }
+    } else {
+      range = getPeriodRange(reminderPeriodType, reminderPeriodValue);
+    }
+
+    if (!range) return [];
+
+    return applications.filter(app => {
+      const createdAt = new Date(app.created_at);
+      const inPeriod = createdAt >= range!.from && createdAt <= range!.to;
+      const matchesFromStatus = reminderFromStatus === 'all' || app.status === reminderFromStatus;
+      return inPeriod && matchesFromStatus;
+    });
+  }, [applications, reminderPeriodType, reminderPeriodValue, reminderRangeFrom, reminderRangeTo, reminderFromStatus]);
+
+  async function sendReminders() {
+    if (reminderMatchedApplications.length === 0) return;
+    setReminderSending(true);
+    setReminderResult(null);
+
+    const deadline = new Date();
+    deadline.setDate(deadline.getDate() + parseInt(reminderDeadlineDays || '3'));
+    const deadlineStr = deadline.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+
+    let sent = 0;
+    let failed = 0;
+
+    for (const app of reminderMatchedApplications) {
+      try {
+        const response = await fetch('/api/emails/send', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            to: app.email,
+            subject: `Reminder: Required Documents for ${app.jobs?.title || 'Your Application'} - Action Required`,
+            type: 'reminder',
+            applicantName: app.full_name,
+            jobTitle: app.jobs?.title || 'Your Application',
+            deadlineStr,
+            customMessage: reminderCustomMessage,
+          }),
+        });
+
+        if (response.ok) {
+          sent++;
+        } else {
+          failed++;
+        }
+      } catch {
+        failed++;
+      }
+    }
+
+    setReminderResult({ sent, failed, success: failed === 0 });
+    setReminderSending(false);
+    setReminderConfirmOpen(false);
+  }
 
   async function executeBulkUpdate() {
     if (!bulkNewStatus || bulkMatchedApplications.length === 0) return;
@@ -397,6 +479,158 @@ export default function ApplicationsPage() {
         </CardContent>
       </Card>
 
+      {/* Send Reminders */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="h-5 w-5" />
+            Send Document Reminders
+          </CardTitle>
+          <CardDescription>
+            Send automated reminder emails to applicants who have not yet submitted required documents. Emails include a notice that they are from the UNEDP HR system.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {/* Period Type */}
+            <div className="space-y-1.5">
+              <Label>Application Period</Label>
+              <Select value={reminderPeriodType} onValueChange={v => { setReminderPeriodType(v); setReminderPeriodValue(''); }}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="last7">Last 7 Days</SelectItem>
+                  <SelectItem value="last30">Last 30 Days</SelectItem>
+                  <SelectItem value="day">Specific Day</SelectItem>
+                  <SelectItem value="week">Specific Week</SelectItem>
+                  <SelectItem value="month">Specific Month</SelectItem>
+                  <SelectItem value="range">Custom Date Range</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Dynamic period value input */}
+            {reminderPeriodType === 'day' && (
+              <div className="space-y-1.5">
+                <Label>Select Day</Label>
+                <Input type="date" value={reminderPeriodValue} onChange={e => setReminderPeriodValue(e.target.value)} />
+              </div>
+            )}
+            {reminderPeriodType === 'week' && (
+              <div className="space-y-1.5">
+                <Label>Select Week</Label>
+                <Input type="week" value={reminderPeriodValue} onChange={e => setReminderPeriodValue(e.target.value)} />
+              </div>
+            )}
+            {reminderPeriodType === 'month' && (
+              <div className="space-y-1.5">
+                <Label>Select Month</Label>
+                <Input type="month" value={reminderPeriodValue} onChange={e => setReminderPeriodValue(e.target.value)} />
+              </div>
+            )}
+            {reminderPeriodType === 'range' && (
+              <>
+                <div className="space-y-1.5">
+                  <Label>From</Label>
+                  <Input type="date" value={reminderRangeFrom} onChange={e => setReminderRangeFrom(e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>To</Label>
+                  <Input type="date" value={reminderRangeTo} onChange={e => setReminderRangeTo(e.target.value)} />
+                </div>
+              </>
+            )}
+
+            {/* Filter by current status */}
+            <div className="space-y-1.5">
+              <Label>Current Status</Label>
+              <Select value={reminderFromStatus} onValueChange={setReminderFromStatus}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any Status</SelectItem>
+                  {STATUS_OPTIONS.map(s => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Deadline days */}
+            <div className="space-y-1.5">
+              <Label>Deadline (days from today)</Label>
+              <Select value={reminderDeadlineDays} onValueChange={setReminderDeadlineDays}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1">1 Day</SelectItem>
+                  <SelectItem value="2">2 Days</SelectItem>
+                  <SelectItem value="3">3 Days</SelectItem>
+                  <SelectItem value="5">5 Days</SelectItem>
+                  <SelectItem value="7">7 Days</SelectItem>
+                  <SelectItem value="14">14 Days</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Custom message */}
+          <div className="space-y-1.5">
+            <Label>Additional Message (optional)</Label>
+            <Textarea
+              placeholder="Add a custom note from HR that will appear in the reminder email..."
+              value={reminderCustomMessage}
+              onChange={e => setReminderCustomMessage(e.target.value)}
+              rows={2}
+            />
+          </div>
+
+          <Separator />
+
+          {/* Preview + Execute */}
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium">
+                {reminderMatchedApplications.length > 0
+                  ? <span className="text-foreground"><span className="text-lg font-bold text-primary">{reminderMatchedApplications.length}</span> applicant{reminderMatchedApplications.length !== 1 ? 's' : ''} will receive reminders</span>
+                  : <span className="text-muted-foreground">No applicants match the selected criteria</span>
+                }
+              </p>
+              {reminderMatchedApplications.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Deadline will be set to: <strong>{(() => {
+                    const d = new Date();
+                    d.setDate(d.getDate() + parseInt(reminderDeadlineDays || '3'));
+                    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+                  })()}</strong>
+                </p>
+              )}
+            </div>
+            <Button
+              disabled={reminderMatchedApplications.length === 0}
+              onClick={() => setReminderConfirmOpen(true)}
+              className="shrink-0"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              Send Reminders
+            </Button>
+          </div>
+
+          {/* Result banner */}
+          {reminderResult && (
+            <div className={`flex items-center gap-2 rounded-md border px-4 py-3 text-sm ${reminderResult.success ? 'border-green-300 bg-green-50 text-green-800' : 'border-amber-300 bg-amber-50 text-amber-800'}`}>
+              {reminderResult.success
+                ? <><CheckCircle2 className="h-4 w-4 shrink-0" /> Successfully sent {reminderResult.sent} reminder{reminderResult.sent !== 1 ? 's' : ''}.</>
+                : <><AlertTriangle className="h-4 w-4 shrink-0" /> Sent {reminderResult.sent} reminder{reminderResult.sent !== 1 ? 's' : ''}, {reminderResult.failed} failed.</>
+              }
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Applications Table */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -510,7 +744,58 @@ export default function ApplicationsPage() {
         </CardContent>
       </Card>
 
-      {/* Confirmation Dialog */}
+      {/* Reminder Confirmation Dialog */}
+      <Dialog open={reminderConfirmOpen} onOpenChange={setReminderConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-blue-500" />
+              Send Document Reminders
+            </DialogTitle>
+            <DialogDescription>
+              You are about to send automated reminder emails to <strong>{reminderMatchedApplications.length}</strong> applicant{reminderMatchedApplications.length !== 1 ? 's' : ''}. Each email will include a notice that it is from the UNEDP HR system.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-md border bg-muted/40 p-3 text-sm space-y-1 max-h-[200px] overflow-y-auto">
+            {reminderMatchedApplications.slice(0, 10).map(a => (
+              <div key={a.id} className="flex justify-between">
+                <span>{a.full_name}</span>
+                <span className="text-muted-foreground text-xs">{a.email}</span>
+              </div>
+            ))}
+            {reminderMatchedApplications.length > 10 && (
+              <p className="text-muted-foreground text-xs pt-1">...and {reminderMatchedApplications.length - 10} more</p>
+            )}
+          </div>
+          <div className="rounded-md bg-blue-50 border border-blue-200 p-3 text-sm text-blue-800">
+            <strong>Email Content:</strong> Reminder to submit video interview, government ID, educational certificates, and professional certifications by <strong>{(() => {
+              const d = new Date();
+              d.setDate(d.getDate() + parseInt(reminderDeadlineDays || '3'));
+              return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            })()}</strong>.
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReminderConfirmOpen(false)} disabled={reminderSending}>
+              Cancel
+            </Button>
+            <Button onClick={sendReminders} disabled={reminderSending}>
+              {reminderSending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="h-4 w-4 mr-2" />
+                  Send {reminderMatchedApplications.length} Reminder{reminderMatchedApplications.length !== 1 ? 's' : ''}
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Update Confirmation Dialog */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>

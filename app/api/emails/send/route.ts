@@ -385,6 +385,134 @@ United Nations Economic Development Foundation
       `;
     }
 
+    // Handle reminder type
+    if (type === 'reminder') {
+      const { deadlineStr, customMessage } = body;
+      
+      htmlContent = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="UTF-8">
+            <style>
+              body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { border-bottom: 3px solid #1e40af; padding-bottom: 20px; margin-bottom: 30px; }
+              .logo { font-size: 24px; font-weight: bold; color: #1e40af; margin-bottom: 5px; }
+              .subheader { font-size: 12px; color: #666; }
+              .automated-notice { background-color: #e0e7ff; border: 1px solid #6366f1; border-radius: 6px; padding: 12px 16px; margin-bottom: 25px; font-size: 12px; color: #3730a3; }
+              .automated-notice strong { color: #1e3a8a; }
+              .content { margin-bottom: 30px; }
+              .urgent-box { background-color: #fef3c7; border-left: 4px solid #d97706; padding: 15px; margin: 20px 0; border-radius: 0 6px 6px 0; }
+              .urgent-box strong { color: #92400e; }
+              .deadline { background-color: #fee2e2; border: 2px solid #ef4444; padding: 15px; margin: 20px 0; border-radius: 6px; text-align: center; }
+              .deadline strong { color: #b91c1c; font-size: 16px; }
+              .requirement { margin-left: 20px; margin-bottom: 10px; }
+              .requirement-item { margin-bottom: 8px; padding-left: 10px; border-left: 2px solid #d1d5db; }
+              .custom-message { background-color: #f0fdf4; border-left: 4px solid #22c55e; padding: 15px; margin: 20px 0; border-radius: 0 6px 6px 0; }
+              .footer { background-color: #f9fafb; padding: 20px; border-top: 1px solid #e5e7eb; margin-top: 30px; font-size: 11px; color: #666; }
+              a { color: #1e40af; text-decoration: none; }
+              a:hover { text-decoration: underline; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <div class="logo">UNEDP</div>
+                <div class="subheader">UN Economic Development Programme - Human Resources</div>
+              </div>
+
+              <div class="automated-notice">
+                <strong>AUTOMATED REMINDER</strong> - This is an automated message from the UNEDP Human Resources system regarding your application for the <strong>${jobTitle}</strong> position.
+              </div>
+
+              <div class="content">
+                <p>Dear ${applicantName},</p>
+
+                <div class="urgent-box">
+                  <strong>Action Required</strong><br/>
+                  We are writing to remind you that we have not yet received all the required documents and information for your application for the <strong>${jobTitle}</strong> position.
+                </div>
+
+                <p>To continue processing your application, please submit the following:</p>
+
+                <div class="requirement">
+                  <div class="requirement-item"><strong>Video Interview:</strong> A 5-7 minute video answering the questions outlined in your original confirmation email. You can use <a href="https://loom.com">Loom.com</a> or upload to Google Drive.</div>
+                  <div class="requirement-item"><strong>Government ID:</strong> A clear scan or photo of your valid passport, national ID, or driver's license.</div>
+                  <div class="requirement-item"><strong>Educational Certificates:</strong> Copies of your degrees, diplomas, and relevant certifications.</div>
+                  <div class="requirement-item"><strong>Professional Certifications:</strong> Any additional professional credentials relevant to the position.</div>
+                </div>
+
+                ${customMessage ? `<div class="custom-message"><strong>Additional Note from HR:</strong><br/>${customMessage}</div>` : ''}
+
+                <div class="deadline">
+                  <strong>Submission Deadline: ${deadlineStr}</strong><br/>
+                  <span style="font-size: 13px; color: #991b1b;">Please submit all required documents by this date to remain under consideration.</span>
+                </div>
+
+                <p><strong>How to Submit:</strong></p>
+                <ul>
+                  <li>Reply directly to this email with your documents attached</li>
+                  <li>Or share Google Drive links to your video and documents</li>
+                </ul>
+
+                <p>If you have already submitted these documents, please disregard this reminder. If you have any questions or need assistance, please contact us at <a href="mailto:careers@unoedp.org">careers@unoedp.org</a>.</p>
+
+                <p>Thank you for your interest in joining UNEDP.</p>
+
+                <p>Best regards,<br/>
+                <strong>UNEDP Human Resources Team</strong><br/>
+                UN Economic Development Programme</p>
+              </div>
+
+              <div class="footer">
+                <p><strong>UNEDP Human Resources | Automated Notification</strong></p>
+                <p>This is an automated email sent by the UNEDP HR system. Please do not reply directly to this email address for general inquiries. For questions about your application, contact <a href="mailto:careers@unoedp.org">careers@unoedp.org</a>.</p>
+                <p style="margin-top: 10px; border-top: 1px solid #d1d5db; padding-top: 10px;">© ${new Date().getFullYear()} UN Economic Development Programme. All rights reserved.</p>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+      
+      textContent = `
+AUTOMATED REMINDER - UNEDP Human Resources System
+
+Dear ${applicantName},
+
+This is an automated reminder regarding your application for the ${jobTitle} position at UNEDP.
+
+ACTION REQUIRED: We have not yet received all the required documents and information for your application.
+
+Please submit the following:
+- Video Interview (5-7 minutes) answering the questions from your confirmation email
+- Government-issued ID (passport, national ID, or driver's license)
+- Educational certificates and degrees
+- Professional certifications (if applicable)
+
+${customMessage ? `ADDITIONAL NOTE FROM HR:\n${customMessage}\n` : ''}
+
+DEADLINE: ${deadlineStr}
+
+Please submit all required documents by this date to remain under consideration.
+
+HOW TO SUBMIT:
+- Reply to this email with documents attached
+- Or share Google Drive links
+
+If you have already submitted these documents, please disregard this reminder.
+
+Questions? Contact: careers@unoedp.org
+
+Best regards,
+UNEDP Human Resources Team
+UN Economic Development Programme
+
+---
+This is an automated email from the UNEDP HR system.
+      `;
+    }
+
     // Handle admin_compose type (custom from name)
     if (type === 'admin_compose') {
       htmlContent = htmlBody || `<p>${emailBody}</p>`;
