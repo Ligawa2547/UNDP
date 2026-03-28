@@ -287,7 +287,8 @@ export default function ApplicationsPage() {
       .in("id", ids);
 
     if (error) {
-      console.error('[v0] Bulk update error:', error);
+      console.error('[v0] Bulk update error:', error.message, error.details, error.hint, error.code);
+      alert(`Bulk update failed: ${error.message || 'Unknown error'}`);
       setBulkResult({ count: 0, success: false });
     } else {
       setBulkResult({ count: ids.length, success: true });
@@ -333,7 +334,7 @@ export default function ApplicationsPage() {
 
       {/* Status Summary */}
       <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-7">
-        {["pending","reviewing","shortlisted","interview","offered","rejected","withdrawn"].map((status) => (
+        {["new","reviewing","shortlisted","interview","offered","rejected","withdrawn"].map((status) => (
           <Card key={status}>
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold">{statusCounts?.[status] || 0}</p>
