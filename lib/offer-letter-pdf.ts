@@ -23,6 +23,63 @@ export interface OfferLetterData {
   signatureType?: 'typed' | 'drawn';
 }
 
+// Format rich text (markdown-like syntax) to HTML
+function formatRichText(text: string): string {
+  if (!text) return '';
+  
+  // Convert markdown-like syntax to HTML
+  let html = text
+    // Escape HTML first
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    // Bold: **text** or __text__
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/__(.+?)__/g, '<strong>$1</strong>')
+    // Italic: _text_ or *text*
+    .replace(/(?<!\*)_(.+?)_(?!_)/g, '<em>$1</em>')
+    .replace(/(?<!\*)\*(?!\*)(.+?)\*(?!\*)/g, '<em>$1</em>')
+    // Heading-like: **Heading:** at start of line
+    .replace(/^<strong>(.+?):<\/strong>/gm, '<strong style="font-size: 12px; color: #003D7A; display: block; margin-top: 15px; margin-bottom: 5px;">$1:</strong>');
+  
+  // Split into lines for processing
+  const lines = html.split('\n');
+  const processedLines: string[] = [];
+  let inList = false;
+  
+  for (const line of lines) {
+    const trimmedLine = line.trim();
+    
+    // Check if it's a bullet point
+    if (trimmedLine.startsWith('•') || trimmedLine.startsWith('-') || trimmedLine.startsWith('*')) {
+      if (!inList) {
+        processedLines.push('<ul style="margin: 10px 0; padding-left: 25px; list-style-type: disc;">');
+        inList = true;
+      }
+      const content = trimmedLine.replace(/^[•\-\*]\s*/, '');
+      processedLines.push(`<li style="margin-bottom: 6px; line-height: 1.6;">${content}</li>`);
+    } else {
+      if (inList) {
+        processedLines.push('</ul>');
+        inList = false;
+      }
+      
+      if (trimmedLine === '') {
+        processedLines.push('<br/>');
+      } else {
+        processedLines.push(`<p style="margin-bottom: 10px; line-height: 1.6;">${trimmedLine}</p>`);
+      }
+    }
+  }
+  
+  // Close any open list
+  if (inList) {
+    processedLines.push('</ul>');
+  }
+  
+  return processedLines.join('\n');
+}
+
 export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean = false): string {
   const formattedStartDate = new Date(data.expectedStartDate).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -433,13 +490,15 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
           </ul>
         </section>
 
-        <!-- Compensation and Benefits -->
-        ${data.salaryNotes ? `
-        <section>
-          <h2>COMPENSATION AND BENEFITS</h2>
-          <p>${data.salaryNotes.split('\\n').join('</p><p>')}</p>
-        </section>
-        ` : ''}
+  <!-- Compensation and Benefits -->
+  ${data.salaryNotes ? `
+  <section>
+  <h2>COMPENSATION AND BENEFITS</h2>
+  <div style="font-size: 11px; color: #333;">
+  ${formatRichText(data.salaryNotes)}
+  </div>
+  </section>
+  ` : ''}
 
         <!-- Conditions of Appointment -->
         <section>
