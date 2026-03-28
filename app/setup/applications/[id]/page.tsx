@@ -52,7 +52,7 @@ interface Application {
 }
 
 const statusColors: Record<string, string> = {
-  pending: "bg-blue-100 text-blue-800",
+  new: "bg-blue-100 text-blue-800",
   reviewing: "bg-yellow-100 text-yellow-800",
   shortlisted: "bg-purple-100 text-purple-800",
   interview: "bg-cyan-100 text-cyan-800",
@@ -67,7 +67,7 @@ export default function ApplicationDetailPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [application, setApplication] = useState<Application | null>(null);
-  const [status, setStatus] = useState("pending");
+  const [status, setStatus] = useState("new");
   const [adminNotes, setAdminNotes] = useState("");
 
   useEffect(() => {
@@ -336,7 +336,7 @@ export default function ApplicationDetailPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="new">New</SelectItem>
                     <SelectItem value="reviewing">Reviewing</SelectItem>
                     <SelectItem value="shortlisted">Shortlisted</SelectItem>
                     <SelectItem value="interview">Interview</SelectItem>

@@ -36,7 +36,7 @@ import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 
 const statusColors: Record<string, string> = {
-  pending: "bg-blue-100 text-blue-800",
+  new: "bg-blue-100 text-blue-800",
   reviewing: "bg-yellow-100 text-yellow-800",
   shortlisted: "bg-purple-100 text-purple-800",
   interview: "bg-cyan-100 text-cyan-800",
@@ -46,7 +46,7 @@ const statusColors: Record<string, string> = {
 };
 
 const STATUS_OPTIONS = [
-  { value: "pending", label: "Pending" },
+  { value: "new", label: "New" },
   { value: "reviewing", label: "Reviewing" },
   { value: "shortlisted", label: "Shortlisted" },
   { value: "interview", label: "Interview" },
