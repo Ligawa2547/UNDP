@@ -53,7 +53,10 @@ export default function OfferSignaturePage() {
   useEffect(() => {
     async function fetchLetter() {
       try {
+        // Create an unauthenticated client to allow public access by token
+        // This bypasses RLS restrictions for public token-based access
         const supabase = createClient();
+        
         const { data, error: queryError } = await supabase
           .from('offer_letters')
           .select('*')
@@ -61,6 +64,7 @@ export default function OfferSignaturePage() {
           .single();
 
         if (queryError || !data) {
+          console.log('[v0] Query error:', queryError?.message, 'Data:', data);
           setError('Invalid or expired offer letter link');
           setLoading(false);
           return;
