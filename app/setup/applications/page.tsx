@@ -36,23 +36,17 @@ import { Textarea } from "@/components/ui/textarea";
 import Link from "next/link";
 
 const statusColors: Record<string, string> = {
-  new: "bg-blue-100 text-blue-800",
+  pending: "bg-blue-100 text-blue-800",
   reviewing: "bg-yellow-100 text-yellow-800",
-  shortlisted: "bg-purple-100 text-purple-800",
-  interview: "bg-cyan-100 text-cyan-800",
-  offered: "bg-green-100 text-green-800",
+  accepted: "bg-green-100 text-green-800",
   rejected: "bg-red-100 text-red-800",
-  withdrawn: "bg-gray-100 text-gray-800",
 };
 
 const STATUS_OPTIONS = [
-  { value: "new", label: "New" },
+  { value: "pending", label: "Pending" },
   { value: "reviewing", label: "Reviewing" },
-  { value: "shortlisted", label: "Shortlisted" },
-  { value: "interview", label: "Interview" },
-  { value: "offered", label: "Offered" },
+  { value: "accepted", label: "Accepted" },
   { value: "rejected", label: "Rejected" },
-  { value: "withdrawn", label: "Withdrawn" },
 ];
 
 interface Application {
@@ -333,8 +327,8 @@ export default function ApplicationsPage() {
       </div>
 
       {/* Status Summary */}
-      <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-7">
-        {["new","reviewing","shortlisted","interview","offered","rejected","withdrawn"].map((status) => (
+      <div className="grid gap-4 md:grid-cols-4">
+        {["pending","reviewing","accepted","rejected"].map((status) => (
           <Card key={status}>
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold">{statusCounts?.[status] || 0}</p>

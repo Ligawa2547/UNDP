@@ -88,7 +88,7 @@ export default function OfferLettersPage() {
   // Bulk issue state
   const [applications, setApplications] = useState<Application[]>([]);
   const [appsLoading, setAppsLoading] = useState(true);
-  const [bulkAppFilter, setBulkAppFilter] = useState('offered'); // filter apps by status
+  const [bulkAppFilter, setBulkAppFilter] = useState('accepted'); // filter apps by status
   const [bulkAppPeriodType, setBulkAppPeriodType] = useState('all');
   const [bulkAppPeriodValue, setBulkAppPeriodValue] = useState('');
   const [bulkAppRangeFrom, setBulkAppRangeFrom] = useState('');
@@ -363,11 +363,10 @@ export default function OfferLettersPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="new">New</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
                   <SelectItem value="reviewing">Reviewing</SelectItem>
-                  <SelectItem value="shortlisted">Shortlisted</SelectItem>
-                  <SelectItem value="interview">Interview</SelectItem>
-                  <SelectItem value="offered">Offered</SelectItem>
+                  <SelectItem value="accepted">Accepted</SelectItem>
+                  <SelectItem value="rejected">Rejected</SelectItem>
                 </SelectContent>
               </Select>
             </div>
