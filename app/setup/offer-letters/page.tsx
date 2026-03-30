@@ -35,7 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   FileCheck, Plus, Eye, Send, Download, Trash2, Copy,
   Clock, X, Layers, Loader2, AlertTriangle, CheckCircle2, Filter,
-  Bold, Italic, List, Type,
+  Bold, Italic, List, Type, Printer,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -112,6 +112,10 @@ export default function OfferLettersPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [bulkIssuing, setBulkIssuing] = useState(false);
   const [bulkResult, setBulkResult] = useState<{ issued: number; failed: number } | null>(null);
+
+  // Print status state
+  const [printingOfferId, setPrintingOfferId] = useState<string | null>(null);
+  const [printOffersOpen, setPrintOffersOpen] = useState(false);
 
   useEffect(() => {
     fetchLetters();
@@ -785,6 +789,9 @@ export default function OfferLettersPage() {
                               <Download className="h-4 w-4" />
                             </Button>
                           )}
+                          <Button variant="outline" size="sm" title="Print Status" onClick={() => { setPrintingOfferId(letter.id); setPrintOffersOpen(true); }}>
+                            <Printer className="h-4 w-4" />
+                          </Button>
                           <Button variant="outline" size="sm" title="Duplicate" onClick={() => handleDuplicate(letter.id)}>
                             <Copy className="h-4 w-4" />
                           </Button>
@@ -807,6 +814,101 @@ export default function OfferLettersPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Print Status Dialog */}
+      {printingOfferId && (
+        <Dialog open={printOffersOpen} onOpenChange={setPrintOffersOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Offer Letter Status Timeline</DialogTitle>
+            </DialogHeader>
+            {(() => {
+              const letter = letters.find(l => l.id === printingOfferId);
+              if (!letter) return <p className="text-muted-foreground">Offer letter not found</p>;
+              
+              const statusTimeline = [
+                { status: 'created', label: 'Created', date: letter.created_at, icon: '📄' },
+                { status: 'sent', label: 'Sent to Applicant', date: letter.sent_at, icon: '📤' },
+                { status: 'viewed', label: 'Viewed by Applicant', date: null, icon: '👁️' },
+                { status: 'signed', label: 'Digitally Signed', date: letter.signed_at, icon: '✅' },
+                { status: 'downloaded', label: 'Downloaded', date: null, icon: '📥' },
+              ];
+
+              return (
+                <div className="space-y-6">
+                  {/* Header Info */}
+                  <div className="bg-muted/40 rounded-lg p-4 border">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Applicant</p>
+                        <p className="font-semibold">{letter.applicant_name}</p>
+                        <p className="text-sm text-muted-foreground">{letter.applicant_email}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Position</p>
+                        <p className="font-semibold">{letter.job_title}</p>
+                        <p className="text-sm text-muted-foreground">Deadline: {new Date(letter.acceptance_deadline).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Status Timeline */}
+                  <div className="space-y-3">
+                    <h3 className="font-semibold text-sm">Status Timeline</h3>
+                    <div className="space-y-2">
+                      {statusTimeline.map((item, idx) => {
+                        const isCompleted = 
+                          (item.status === 'created') ||
+                          (item.status === 'sent' && letter.status !== 'draft') ||
+                          (item.status === 'signed' && (letter.status === 'signed' || letter.status === 'downloaded')) ||
+                          (item.status === 'viewed' && (letter.status === 'viewed' || letter.status === 'signed' || letter.status === 'downloaded'));
+                        
+                        return (
+                          <div key={item.status} className="flex items-start gap-3">
+                            <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-lg ${
+                              isCompleted ? 'bg-green-100' : 'bg-gray-100'
+                            }`}>
+                              {item.icon}
+                            </div>
+                            <div className="flex-1 pt-1">
+                              <p className={`font-medium text-sm ${isCompleted ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                {item.label}
+                              </p>
+                              {item.date && (
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(item.date).toLocaleString()}
+                                </p>
+                              )}
+                              {!item.date && !isCompleted && (
+                                <p className="text-xs text-amber-600">Pending</p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Current Status Badge */}
+                  <div className="border-t pt-4">
+                    <p className="text-xs text-muted-foreground mb-2">Current Status</p>
+                    <Badge className={statusColors[letter.status] || 'bg-gray-100 text-gray-800'}>
+                      {letter.status.charAt(0).toUpperCase() + letter.status.slice(1)}
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })()}
+            <div className="flex gap-2 justify-end pt-4 border-t">
+              <Button variant="outline" onClick={() => setPrintOffersOpen(false)}>Close</Button>
+              <Button onClick={() => window.print()}>
+                <Printer className="h-4 w-4 mr-2" />
+                Print
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Bulk Issue Confirmation Dialog */}
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
