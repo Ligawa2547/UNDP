@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,6 +18,22 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+
+interface OfferLetter {
+  id: string;
+  applicant_name: string;
+  applicant_email: string;
+  job_title: string;
+  reporting_station: string | null;
+  contract_type: string | null;
+  grade_level: string | null;
+  expected_start_date: string;
+  contract_duration: string | null;
+  acceptance_deadline: string;
+  salary_notes: string | null;
+  custom_clauses: string | null;
+  status: string;
+}
 
 interface FormData {
   offerLetterId: string;
@@ -37,6 +53,9 @@ interface FormData {
 export default function NewContractPage() {
   const router = useRouter();
   const supabase = createClient();
+
+  const [offers, setOffers] = useState<OfferLetter[]>([]);
+  const [offersLoading, setOffersLoading] = useState(true);
 
   const [formData, setFormData] = useState<FormData>({
     offerLetterId: '',
@@ -58,8 +77,54 @@ export default function NewContractPage() {
   const [success, setSuccess] = useState('');
   const [createdContractId, setCreatedContractId] = useState('');
 
+  // Load offers on mount
+  useEffect(() => {
+    fetchOffers();
+  }, []);
+
+  const fetchOffers = async () => {
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('offer_letters')
+        .select('*')
+        .in('status', ['sent', 'viewed', 'signed'])
+        .order('created_at', { ascending: false });
+
+      if (fetchError) {
+        console.error('[v0] Error fetching offers:', fetchError);
+        return;
+      }
+
+      setOffers(data || []);
+    } catch (err) {
+      console.error('[v0] Error:', err);
+    } finally {
+      setOffersLoading(false);
+    }
+  };
+
   const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleSelectOffer = (offerId: string) => {
+    const offer = offers.find(o => o.id === offerId);
+    if (offer) {
+      setFormData({
+        offerLetterId: offer.id,
+        applicantName: offer.applicant_name,
+        applicantEmail: offer.applicant_email,
+        jobTitle: offer.job_title,
+        reportingStation: offer.reporting_station || '',
+        contractType: offer.contract_type || 'fixed-term',
+        gradeLevel: offer.grade_level || '',
+        expectedStartDate: offer.expected_start_date,
+        contractDuration: offer.contract_duration || '2 years',
+        acceptanceDeadline: offer.acceptance_deadline,
+        salaryNotes: offer.salary_notes || '',
+        customClauses: offer.custom_clauses || '',
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -170,9 +235,53 @@ export default function NewContractPage() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Employee Information */}
+            {/* Select Offer Letter */}
             <div>
-              <h3 className="font-semibold mb-4">Employee Information</h3>
+              <h3 className="font-semibold mb-4">Select Offer Letter (Recommended)</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Choose an issued offer letter to automatically populate contract details. This ensures consistency between the offer and contract.
+              </p>
+              {offersLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : offers.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+                  {offers.map(offer => (
+                    <button
+                      key={offer.id}
+                      type="button"
+                      onClick={() => handleSelectOffer(offer.id)}
+                      className={`p-4 border-2 rounded-lg text-left transition ${
+                        formData.offerLetterId === offer.id
+                          ? 'border-blue-500 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <p className="font-medium">{offer.applicant_name}</p>
+                      <p className="text-sm text-muted-foreground">{offer.applicant_email}</p>
+                      <p className="text-sm text-muted-foreground">{offer.job_title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Status: <span className="capitalize font-medium">{offer.status}</span>
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-4 border border-amber-200 bg-amber-50 rounded-lg mb-6">
+                  <p className="text-sm text-amber-800">
+                    No issued offer letters found. You can create a contract manually below, but it&apos;s recommended to issue offer letters first.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Manual Entry Section */}
+            <div className="border-t pt-6">
+              <h3 className="font-semibold mb-4">Contract Details {formData.offerLetterId && '(Loaded from Offer Letter)'}</h3>
+              <div className="space-y-6">
+            <div>
+              <h4 className="font-medium mb-4">Employee Information</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="applicantName">Full Name *</Label>
@@ -200,7 +309,7 @@ export default function NewContractPage() {
 
             {/* Position Information */}
             <div>
-              <h3 className="font-semibold mb-4">Position Information</h3>
+              <h4 className="font-medium mb-4">Position Information</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="jobTitle">Job Title *</Label>
@@ -235,7 +344,7 @@ export default function NewContractPage() {
 
             {/* Contract Terms */}
             <div>
-              <h3 className="font-semibold mb-4">Contract Terms</h3>
+              <h4 className="font-medium mb-4">Contract Terms</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="contractType">Contract Type *</Label>
@@ -284,7 +393,7 @@ export default function NewContractPage() {
 
             {/* Additional Information */}
             <div>
-              <h3 className="font-semibold mb-4">Additional Information</h3>
+              <h4 className="font-medium mb-4">Additional Information</h4>
               <div className="space-y-4">
                 <div>
                   <Label htmlFor="salaryNotes">Salary Notes</Label>
@@ -324,6 +433,8 @@ export default function NewContractPage() {
                 {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 Create Contract
               </Button>
+            </div>
+              </div>
             </div>
           </form>
         </CardContent>

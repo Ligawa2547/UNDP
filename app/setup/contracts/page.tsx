@@ -48,6 +48,105 @@ const contractStatusColors: Record<string, string> = {
   expired: "bg-red-100 text-red-800",
 };
 
+interface OffersQuickCreateProps {
+  onSuccess: () => void;
+}
+
+function OffersQuickCreate({ onSuccess }: OffersQuickCreateProps) {
+  const supabase = createClient();
+  const [offers, setOffers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [creating, setCreating] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchOffers();
+  }, []);
+
+  const fetchOffers = async () => {
+    try {
+      setLoading(true);
+      const { data } = await supabase
+        .from('offer_letters')
+        .select('*')
+        .in('status', ['sent', 'viewed', 'signed'])
+        .limit(5)
+        .order('created_at', { ascending: false });
+
+      setOffers(data || []);
+    } catch (error) {
+      console.error('[v0] Error fetching offers:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateContract = async (offerId: string) => {
+    setCreating(offerId);
+
+    try {
+      const response = await fetch('/api/contracts/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offerLetterId: offerId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Contract created and sent!\n\nPortal Link: ${window.location.origin}${data.portalLink}`);
+        onSuccess();
+        fetchOffers();
+      } else {
+        alert(`Error: ${data.error || 'Failed to create contract'}`);
+      }
+    } catch (error) {
+      console.error('[v0] Error:', error);
+      alert('Failed to create contract');
+    } finally {
+      setCreating(null);
+    }
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center py-4"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+  }
+
+  if (offers.length === 0) {
+    return (
+      <div className="text-sm text-blue-800">
+        No issued offer letters available. Create offer letters first, then you can quickly convert them to contracts here.
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {offers.map(offer => (
+        <div key={offer.id} className="flex flex-col gap-2 p-3 bg-white rounded border border-blue-200">
+          <div>
+            <p className="font-medium text-sm">{offer.applicant_name}</p>
+            <p className="text-xs text-muted-foreground">{offer.job_title}</p>
+            <p className="text-xs text-muted-foreground">{offer.applicant_email}</p>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => handleCreateContract(offer.id)}
+            disabled={creating === offer.id}
+            className="w-full"
+          >
+            {creating === offer.id ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <FileText className="h-4 w-4 mr-2" />
+            )}
+            Create Contract
+          </Button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 interface Contract {
   id: string;
   offer_letter_id: string;
@@ -114,6 +213,28 @@ export default function ContractsPage() {
       console.error('[v0] Error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateContractFromOffer = async (offerLetterData: any) => {
+    try {
+      const response = await fetch('/api/contracts/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offerLetterId: offerLetterData.id }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Contract created and sent to applicant!\n\nPortal Link: ${window.location.origin}${data.portalLink}`);
+        loadContracts();
+      } else {
+        alert(`Error creating contract: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('[v0] Error creating contract:', error);
+      alert('Failed to create contract. Please try again.');
     }
   };
 
@@ -184,6 +305,17 @@ export default function ContractsPage() {
           </Button>
         </Link>
       </div>
+
+      {/* Quick Create from Offer Letters */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardHeader>
+          <CardTitle className="text-base">Create Contract from Offer Letter</CardTitle>
+          <CardDescription>Select an issued offer letter to instantly create and send a contract based on its details.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <OffersQuickCreate onSuccess={() => loadContracts()} />
+        </CardContent>
+      </Card>
 
       {/* Filters */}
       <Card>
