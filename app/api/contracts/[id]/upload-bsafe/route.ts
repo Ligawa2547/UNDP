@@ -76,20 +76,43 @@ export async function POST(
 
     console.log('[v0] Uploading BSAFE file:', file.name, 'Size:', file.size, 'Type:', file.type);
 
-    // Store in database with file data as base64
-    const { data: uploadData, error: uploadError } = await supabase
+    // First, check if an upload already exists for this contract
+    const { data: existingUpload } = await supabase
       .from('bsafe_uploads')
-      .upsert({
-        contract_id: contractId,
-        file_name: file.name,
-        file_size: file.size,
-        file_url: dataUrl, // Store base64 data URL
-        uploaded_at: new Date().toISOString(),
-      }, {
-        onConflict: 'contract_id',
-      })
-      .select()
+      .select('id')
+      .eq('contract_id', contractId)
       .single();
+
+    let uploadResult;
+    if (existingUpload) {
+      // Update existing upload
+      uploadResult = await supabase
+        .from('bsafe_uploads')
+        .update({
+          file_name: file.name,
+          file_size: file.size,
+          file_url: dataUrl,
+          uploaded_at: new Date().toISOString(),
+        })
+        .eq('contract_id', contractId)
+        .select()
+        .single();
+    } else {
+      // Create new upload
+      uploadResult = await supabase
+        .from('bsafe_uploads')
+        .insert({
+          contract_id: contractId,
+          file_name: file.name,
+          file_size: file.size,
+          file_url: dataUrl,
+          uploaded_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+    }
+
+    const { data: uploadData, error: uploadError } = uploadResult;
 
     if (uploadError) {
       console.error('[v0] Upload error:', uploadError);
