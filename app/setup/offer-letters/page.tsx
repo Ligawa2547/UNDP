@@ -35,7 +35,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   FileCheck, Plus, Eye, Send, Download, Trash2, Copy,
   Clock, X, Layers, Loader2, AlertTriangle, CheckCircle2, Filter,
-  Bold, Italic, List, Type, Printer,
+  Bold, Italic, List, Type, Printer, ScrollText,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -116,6 +116,10 @@ export default function OfferLettersPage() {
   // Print status state
   const [printingOfferId, setPrintingOfferId] = useState<string | null>(null);
   const [printOffersOpen, setPrintOffersOpen] = useState(false);
+
+  // Contract creation state
+  const [contractCreatingOfferId, setContractCreatingOfferId] = useState<string | null>(null);
+  const [contractCreating, setContractCreating] = useState(false);
 
   useEffect(() => {
     fetchLetters();
@@ -284,6 +288,34 @@ export default function OfferLettersPage() {
       textarea.setSelectionRange(lineStart + 2, lineStart + 2);
     }, 0);
   }
+
+  const handleCreateContract = async (offerId: string) => {
+    setContractCreatingOfferId(offerId);
+    setContractCreating(true);
+
+    try {
+      const response = await fetch('/api/contracts/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offerLetterId: offerId }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`Contract created and sent to applicant!\n\nPortal Link: ${window.location.origin}${data.portalLink}`);
+        // Refresh the contracts list if needed
+      } else {
+        alert(`Error creating contract: ${data.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      console.error('[v0] Error creating contract:', error);
+      alert('Failed to create contract. Please try again.');
+    } finally {
+      setContractCreating(false);
+      setContractCreatingOfferId(null);
+    }
+  };
 
   async function executeBulkIssue() {
     if (selectedApps.length === 0 || !bulkStartDate || !bulkDuration || !bulkDeadline) return;
@@ -792,6 +824,21 @@ export default function OfferLettersPage() {
                           <Button variant="outline" size="sm" title="Print Status" onClick={() => { setPrintingOfferId(letter.id); setPrintOffersOpen(true); }}>
                             <Printer className="h-4 w-4" />
                           </Button>
+                          {letter.status !== 'draft' && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              title="Create Contract" 
+                              onClick={() => handleCreateContract(letter.id)}
+                              disabled={contractCreating && contractCreatingOfferId === letter.id}
+                            >
+                              {contractCreating && contractCreatingOfferId === letter.id ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                              ) : (
+                                <ScrollText className="h-4 w-4" />
+                              )}
+                            </Button>
+                          )}
                           <Button variant="outline" size="sm" title="Duplicate" onClick={() => handleDuplicate(letter.id)}>
                             <Copy className="h-4 w-4" />
                           </Button>
