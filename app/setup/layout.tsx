@@ -15,6 +15,7 @@ import {
   ClipboardList,
   Mail,
   FileCheck,
+  ScrollText,
 } from "lucide-react";
 
 const sidebarLinks = [
@@ -22,6 +23,7 @@ const sidebarLinks = [
   { href: "/setup/jobs", label: "Jobs", icon: Briefcase },
   { href: "/setup/applications", label: "Applications", icon: ClipboardList },
   { href: "/setup/offer-letters", label: "Offer Letters", icon: FileCheck },
+  { href: "/setup/contracts", label: "Contracts", icon: ScrollText },
   { href: "/setup/countries", label: "Countries", icon: Globe },
   { href: "/setup/news", label: "News & Stories", icon: Newspaper },
   { href: "/setup/resources", label: "Resources", icon: FileText },

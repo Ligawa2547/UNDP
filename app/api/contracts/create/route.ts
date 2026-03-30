@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { generateToken } from '@/lib/token-generator';
+import { sendEmail, emailTemplates } from '@/lib/email-service';
 
 export async function POST(request: NextRequest) {
   try {
@@ -73,6 +74,34 @@ export async function POST(request: NextRequest) {
         ifaq_confirmed: false,
         ssafe_confirmed: false,
       });
+
+    // Send contract issuance email to applicant
+    try {
+      const baseUrl = process.env.VERCEL_URL 
+        ? `https://${process.env.VERCEL_URL}`
+        : 'https://www.unoedp.org';
+      const contractLink = `${baseUrl}/contract/${token}`;
+      
+      const emailTemplate = emailTemplates.contractIssuance(
+        applicantName,
+        jobTitle,
+        contractLink,
+        new Date(acceptanceDeadline).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        })
+      );
+
+      await sendEmail({
+        to: applicantEmail,
+        subject: emailTemplate.subject,
+        html: emailTemplate.html,
+      });
+    } catch (emailError) {
+      console.error('[v0] Error sending contract email:', emailError);
+      // Don't fail the contract creation if email fails
+    }
 
     return NextResponse.json({
       success: true,

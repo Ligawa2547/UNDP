@@ -97,4 +97,38 @@ export const emailTemplates = {
       </div>
     `,
   }),
+
+  contractIssuance: (applicantName: string, jobTitle: string, contractLink: string, deadline: string) => ({
+    subject: `Employment Contract - ${jobTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="border-top: 4px solid #1f2937; padding: 20px 0;">
+          <h2>Employment Contract</h2>
+          <p>Dear ${applicantName},</p>
+          <p>We are pleased to issue your employment contract for the position of <strong>${jobTitle}</strong>.</p>
+          <p>Please review the contract details and complete the required steps by <strong>${deadline}</strong>:</p>
+          <ol style="line-height: 1.8;">
+            <li>Review the employment contract</li>
+            <li>Provide your bank details</li>
+            <li>Confirm visa status</li>
+            <li>Confirm IFAQ and SSAFE certifications</li>
+            <li>Digitally sign the contract</li>
+            <li>Upload your BSAFE certification</li>
+          </ol>
+          <p style="margin: 20px 0;">
+            <a href="${contractLink}" style="display: inline-block; background-color: #1f2937; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">
+              Access Your Contract Portal
+            </a>
+          </p>
+          <p style="font-size: 12px; color: #666;">
+            <strong>BSAFE Certification:</strong> You can obtain your BSAFE certification from:
+            <br/>• UNSSC: <a href="https://unssc.org">https://unssc.org</a>
+            <br/>• IICAR: <a href="https://iicar.org">https://iicar.org</a>
+          </p>
+          <p>If you have any questions, please contact our HR department.</p>
+          <p>Best regards,<br/><strong>UNDP Human Resources</strong></p>
+        </div>
+      </div>
+    `,
+  }),
 };
