@@ -114,9 +114,7 @@ export async function POST(request: NextRequest) {
     // Send contract issuance email to applicant
     try {
       console.log('[v0] Preparing to send contract email...');
-      const baseUrl = process.env.VERCEL_URL 
-        ? `https://${process.env.VERCEL_URL}`
-        : 'https://www.unoedp.org';
+      const baseUrl = 'https://www.unoedp.org';
       const contractLink = `${baseUrl}/contract/${token}`;
       
       const deadline = new Date(offerLetter.acceptance_deadline).toLocaleDateString('en-US', {

@@ -69,7 +69,8 @@ export default function ContractSignaturePage() {
   const [bankAccountHolder, setBankAccountHolder] = useState('');
   const [bankName, setBankName] = useState('');
   const [bankAccountNumber, setBankAccountNumber] = useState('');
-  const [bankCode, setBankCode] = useState('');
+  const [swiftCode, setSwiftCode] = useState('');
+  const [iban, setIban] = useState('');
 
   const [visaStatus, setVisaStatus] = useState('');
   const [visaExpiry, setVisaExpiry] = useState('');
@@ -137,10 +138,11 @@ export default function ContractSignaturePage() {
           .single();
 
         if (details) {
-          setBankAccountHolder(details.bank_account_holder || '');
+          setBankAccountHolder(details.account_holder_name || '');
           setBankName(details.bank_name || '');
-          setBankAccountNumber(details.bank_account_number || '');
-          setBankCode(details.bank_code || '');
+          setBankAccountNumber(details.account_number || '');
+          setSwiftCode(details.swift_code || '');
+          setIban(details.iban || '');
           setVisaStatus(details.visa_status || '');
           setVisaExpiry(details.visa_expiry || '');
           setNeedsVisaAssistance(details.needs_visa_assistance || false);
@@ -190,7 +192,7 @@ export default function ContractSignaturePage() {
   };
 
   const handleCompleteBankDetails = async () => {
-    if (!bankAccountHolder || !bankName || !bankAccountNumber || !bankCode) {
+    if (!bankAccountHolder || !bankName || !bankAccountNumber) {
       alert('Please fill in all bank details');
       return;
     }
@@ -199,16 +201,15 @@ export default function ContractSignaturePage() {
       const supabase = createClient();
       
       const { error } = await supabase
-        .from('contract_details')
-        .upsert({
-          contract_id: contract!.id,
-          bank_account_holder: bankAccountHolder,
+        .from('employment_contracts')
+        .update({
+          account_holder_name: bankAccountHolder,
           bank_name: bankName,
-          bank_account_number: bankAccountNumber,
-          bank_code: bankCode,
-        }, {
-          onConflict: 'contract_id',
-        });
+          account_number: bankAccountNumber,
+          swift_code: swiftCode || null,
+          iban: iban || null,
+        })
+        .eq('id', contract!.id);
 
       if (error) {
         console.error('[v0] Error:', error);
@@ -236,15 +237,13 @@ export default function ContractSignaturePage() {
       const supabase = createClient();
       
       const { error } = await supabase
-        .from('contract_details')
-        .upsert({
-          contract_id: contract!.id,
+        .from('employment_contracts')
+        .update({
           visa_status: visaStatus,
-          visa_expiry: visaExpiry || null,
-          needs_visa_assistance: needsVisaAssistance,
-        }, {
-          onConflict: 'contract_id',
-        });
+          visa_notes: visaExpiry || null,
+          needs_assistance: needsVisaAssistance,
+        })
+        .eq('id', contract!.id);
 
       if (error) throw error;
 
@@ -268,15 +267,14 @@ export default function ContractSignaturePage() {
       const supabase = createClient();
       
       const { error } = await supabase
-        .from('contract_details')
-        .upsert({
-          contract_id: contract!.id,
-          ifaq_confirmed: ifaqConfirmed,
-          ssafe_confirmed: ssafeConfirmed,
-          ssafe_approval_number: ssafeApprovalNumber,
-        }, {
-          onConflict: 'contract_id',
-        });
+        .from('employment_contracts')
+        .update({
+          ifaq_status: ifaqConfirmed ? 'submitted' : 'not-submitted',
+          ifaq_confirmed_at: ifaqConfirmed ? new Date().toISOString() : null,
+          ssafe_status: ssafeConfirmed ? 'submitted' : 'not-submitted',
+          ssafe_confirmed_at: ssafeConfirmed ? new Date().toISOString() : null,
+        })
+        .eq('id', contract!.id);
 
       if (error) throw error;
 
@@ -549,31 +547,29 @@ export default function ContractSignaturePage() {
                 </div>
 
                 <div className="border-t pt-4">
-                  <a 
-                    href={`/api/contracts/${contract.id}/download`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 font-semibold"
+                  <Button 
+                    onClick={() => window.print()}
+                    variant="outline"
+                    className="w-full"
                   >
-                    Download Contract PDF
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
+                    Print Contract
+                  </Button>
                 </div>
 
-                <Checkbox
-                  checked={completedSteps.has('contract-review')}
-                  onCheckedChange={(checked) => {
-                    const newCompleted = new Set(completedSteps);
-                    if (checked) {
+                <div className="flex gap-4">
+                  <Button
+                    onClick={() => {
+                      const newCompleted = new Set(completedSteps);
                       newCompleted.add('contract-review');
                       setCompletedSteps(newCompleted);
-                    }
-                  }}
-                  id="contract-review-confirm"
-                />
-                <Label htmlFor="contract-review-confirm" className="ml-2 text-sm">
-                  I have reviewed the contract details
-                </Label>
+                      setCurrentStep('bank-details');
+                    }}
+                    className="flex-1"
+                  >
+                    Proceed to Bank Details
+                    <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -618,12 +614,22 @@ export default function ContractSignaturePage() {
                   </div>
 
                   <div>
-                    <Label htmlFor="bank-code">Bank Code/SWIFT</Label>
+                    <Label htmlFor="bank-code">SWIFT Code (Optional)</Label>
                     <Input
                       id="bank-code"
-                      value={bankCode}
-                      onChange={(e) => setBankCode(e.target.value)}
-                      placeholder="Bank code or SWIFT code"
+                      value={swiftCode}
+                      onChange={(e) => setSwiftCode(e.target.value)}
+                      placeholder="Bank SWIFT code"
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="iban">IBAN (Optional)</Label>
+                    <Input
+                      id="iban"
+                      value={iban}
+                      onChange={(e) => setIban(e.target.value)}
+                      placeholder="International Bank Account Number"
                     />
                   </div>
                 </div>
