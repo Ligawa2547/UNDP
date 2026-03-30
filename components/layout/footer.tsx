@@ -136,8 +136,6 @@ export function Footer() {
           <div className="flex flex-wrap gap-4 text-sm text-white/80">
             <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-white">Terms of Use</Link>
-            <Link href="/fraud-alert" className="hover:text-white">Fraud Alert</Link>
-            <Link href="/scam-alert" className="hover:text-white">Scam Alert</Link>
           </div>
         </div>
 
