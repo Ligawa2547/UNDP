@@ -27,7 +27,13 @@ interface Contract {
   applicant_email: string;
   job_title: string;
   reporting_station: string | null;
+  grade_level: string | null;
+  contract_type: string | null;
   expected_start_date: string;
+  contract_duration: string | null;
+  acceptance_deadline: string | null;
+  salary_notes: string | null;
+  custom_clauses: string | null;
   status: string;
   token_expires_at: string;
 }
@@ -519,34 +525,123 @@ export default function ContractSignaturePage() {
               <div className="space-y-4">
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <p className="text-sm text-blue-900">
-                    Please review the contract details below. If you have any questions or concerns, please contact HR before proceeding.
+                    Please carefully review all contract details below. If you have any questions or concerns, please contact HR before proceeding.
                   </p>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Full Name</Label>
-                    <p className="font-semibold">{contract.applicant_name}</p>
+                {/* Detailed Contract Display - Print Friendly */}
+                <div className="bg-white border border-slate-200 rounded-lg p-8 space-y-6 print:shadow-none print:border-0">
+                  {/* Header */}
+                  <div className="text-center border-b pb-6">
+                    <h2 className="text-2xl font-bold">EMPLOYMENT CONTRACT</h2>
+                    <p className="text-muted-foreground text-sm mt-2">Contract ID: {contract.id}</p>
                   </div>
+
+                  {/* Employee Information */}
                   <div>
-                    <Label className="text-xs text-muted-foreground">Email</Label>
-                    <p className="font-semibold">{contract.applicant_email}</p>
+                    <h3 className="font-semibold text-lg mb-4">1. EMPLOYEE INFORMATION</h3>
+                    <div className="grid grid-cols-2 gap-6 text-sm">
+                      <div>
+                        <Label className="text-xs text-muted-foreground uppercase">Full Name</Label>
+                        <p className="font-semibold text-base mt-1">{contract.applicant_name}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground uppercase">Email Address</Label>
+                        <p className="font-semibold text-base mt-1">{contract.applicant_email}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Position</Label>
-                    <p className="font-semibold">{contract.job_title}</p>
+
+                  {/* Position Information */}
+                  <div className="border-t pt-6">
+                    <h3 className="font-semibold text-lg mb-4">2. POSITION DETAILS</h3>
+                    <div className="grid grid-cols-2 gap-6 text-sm">
+                      <div>
+                        <Label className="text-xs text-muted-foreground uppercase">Position Title</Label>
+                        <p className="font-semibold text-base mt-1">{contract.job_title}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground uppercase">Grade Level</Label>
+                        <p className="font-semibold text-base mt-1">{contract.grade_level || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground uppercase">Reporting Station</Label>
+                        <p className="font-semibold text-base mt-1">{contract.reporting_station || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground uppercase">Contract Type</Label>
+                        <p className="font-semibold text-base mt-1 capitalize">{contract.contract_type || 'N/A'}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Reporting Station</Label>
-                    <p className="font-semibold">{contract.reporting_station || 'N/A'}</p>
+
+                  {/* Employment Terms */}
+                  <div className="border-t pt-6">
+                    <h3 className="font-semibold text-lg mb-4">3. EMPLOYMENT TERMS</h3>
+                    <div className="grid grid-cols-2 gap-6 text-sm">
+                      <div>
+                        <Label className="text-xs text-muted-foreground uppercase">Expected Start Date</Label>
+                        <p className="font-semibold text-base mt-1">{new Date(contract.expected_start_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground uppercase">Contract Duration</Label>
+                        <p className="font-semibold text-base mt-1">{contract.contract_duration || 'N/A'}</p>
+                      </div>
+                      <div>
+                        <Label className="text-xs text-muted-foreground uppercase">Acceptance Deadline</Label>
+                        <p className="font-semibold text-base mt-1">{contract.acceptance_deadline ? new Date(contract.acceptance_deadline).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</p>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <Label className="text-xs text-muted-foreground">Expected Start Date</Label>
-                    <p className="font-semibold">{new Date(contract.expected_start_date).toLocaleDateString()}</p>
+
+                  {/* Additional Terms */}
+                  {(contract.salary_notes || contract.custom_clauses) && (
+                    <div className="border-t pt-6">
+                      <h3 className="font-semibold text-lg mb-4">4. ADDITIONAL TERMS</h3>
+                      {contract.salary_notes && (
+                        <div className="mb-4">
+                          <Label className="text-xs text-muted-foreground uppercase">Salary & Compensation Notes</Label>
+                          <p className="text-sm mt-2 whitespace-pre-wrap">{contract.salary_notes}</p>
+                        </div>
+                      )}
+                      {contract.custom_clauses && (
+                        <div>
+                          <Label className="text-xs text-muted-foreground uppercase">Special Clauses</Label>
+                          <p className="text-sm mt-2 whitespace-pre-wrap">{contract.custom_clauses}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div className="border-t pt-6 text-center text-xs text-muted-foreground">
+                    <p>This contract is valid until {contract.token_expires_at ? new Date(contract.token_expires_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}</p>
                   </div>
                 </div>
 
-                <div className="border-t pt-4">
+                {/* Action Buttons */}
+                <div className="flex gap-4 print:hidden">
+                  <Button 
+                    onClick={() => window.print()}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    Print / Save as PDF
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      const newCompleted = new Set(completedSteps);
+                      newCompleted.add('contract-review');
+                      setCompletedSteps(newCompleted);
+                      setCurrentStep('bank-details');
+                    }}
+                    className="flex-1"
+                  >
+                    I Agree, Continue <ChevronRight className="h-4 w-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            )}
                   <Button 
                     onClick={() => window.print()}
                     variant="outline"
@@ -773,10 +868,32 @@ export default function ContractSignaturePage() {
                 </div>
 
                 {signed ? (
-                  <div className="text-center py-8">
-                    <Check className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                    <p className="text-lg font-semibold mb-2">Contract Signed Successfully</p>
-                    <p className="text-muted-foreground">Proceed to upload your BSAFE certification</p>
+                  <div className="space-y-4">
+                    <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6 text-center">
+                      <Check className="h-12 w-12 text-green-600 mx-auto mb-3" />
+                      <p className="text-lg font-semibold text-green-900 mb-2">✓ Contract Signed Successfully</p>
+                      <p className="text-sm text-green-700">Your signature has been recorded and your contract is now complete.</p>
+                    </div>
+
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <p className="text-sm text-blue-900">
+                        Next step: Upload your BSAFE certification to complete the onboarding process.
+                      </p>
+                    </div>
+
+                    <Button 
+                      onClick={() => {
+                        const newCompleted = new Set(completedSteps);
+                        newCompleted.add('sign-contract');
+                        setCompletedSteps(newCompleted);
+                        setCurrentStep('bsafe-upload');
+                      }} 
+                      size="lg"
+                      className="w-full"
+                    >
+                      Proceed to BSAFE Upload
+                      <ChevronRight className="h-4 w-4 ml-2" />
+                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -855,20 +972,6 @@ export default function ContractSignaturePage() {
                     </Button>
                   </div>
                 )}
-
-                {signed && (
-                  <Button onClick={() => {
-                    const newCompleted = new Set(completedSteps);
-                    newCompleted.add('sign-contract');
-                    setCompletedSteps(newCompleted);
-                    setCurrentStep('bsafe-upload');
-                  }} className="w-full">
-                    Continue to BSAFE Upload
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </Button>
-                )}
-              </div>
-            )}
 
             {/* BSAFE Upload */}
             {currentStep === 'bsafe-upload' && (
