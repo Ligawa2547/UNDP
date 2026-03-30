@@ -66,6 +66,9 @@ export default function OfferLetterDetailPage() {
   const [includeSsafeIfak, setIncludeSsafeIfak] = useState(true);
   const [allowDownloadUnsigned, setAllowDownloadUnsigned] = useState(false);
   const [requireSignatureBeforeDownload, setRequireSignatureBeforeDownload] = useState(true);
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  const [newStatus, setNewStatus] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
     async function fetchLetter() {
@@ -210,6 +213,40 @@ export default function OfferLetterDetailPage() {
     } catch (error) {
       console.error('[v0] Error revoking:', error);
       alert('Error revoking offer letter');
+    }
+  };
+
+  const handleStatusUpdate = async (status: string) => {
+    try {
+      setStatusUpdating(true);
+
+      const response = await fetch(`/api/offer-letters/${letter!.id}/update-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status,
+          message: statusMessage || `Offer letter status has been updated to ${status}`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(`Error: ${data.error || 'Failed to update status'}`);
+        return;
+      }
+
+      alert('Offer letter status updated and email notification sent to applicant.');
+      setNewStatus('');
+      setStatusMessage('');
+
+      // Update local state
+      setLetter((prev) => prev ? { ...prev, status } : null);
+    } catch (error) {
+      console.error('[v0] Error updating status:', error);
+      alert('Failed to update offer letter status');
+    } finally {
+      setStatusUpdating(false);
     }
   };
 
@@ -462,7 +499,47 @@ export default function OfferLetterDetailPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Status Update Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Update Offer Letter Status</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <Label>New Status</Label>
+              <select
+                value={newStatus}
+                onChange={(e) => setNewStatus(e.target.value)}
+                className="w-full mt-2 p-2 border rounded"
+              >
+                <option value="">Select a status...</option>
+                <option value="sent">Sent</option>
+                <option value="viewed">Viewed</option>
+                <option value="signed">Signed</option>
+                <option value="accepted">Accepted</option>
+                <option value="revoked">Revoked</option>
+              </select>
+            </div>
+
+            <div>
+              <Label>Notification Message</Label>
+              <Textarea
+                value={statusMessage}
+                onChange={(e) => setStatusMessage(e.target.value)}
+                placeholder="Optional message to include in the email notification..."
+                rows={3}
+              />
+            </div>
+
+            <Button
+              onClick={() => newStatus && handleStatusUpdate(newStatus)}
+              disabled={statusUpdating || !newStatus}
+              className="w-full"
+            >
+              {statusUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Update Status & Send Notification
+            </Button>
+          </CardContent>
+        </Card>
       )}
-    </div>
-  );
-}

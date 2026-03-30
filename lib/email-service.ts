@@ -131,4 +131,75 @@ export const emailTemplates = {
       </div>
     `,
   }),
+
+  bsafeApproved: (applicantName: string, jobTitle: string) => ({
+    subject: `BSAFE Certification Approved - ${jobTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="border-top: 4px solid #10b981; padding: 20px 0;">
+          <h2 style="color: #10b981;">BSAFE Certification Approved</h2>
+          <p>Dear ${applicantName},</p>
+          <p>We are pleased to inform you that your BSAFE certification (Basic Security Awareness in the Field) has been <strong style="color: #10b981;">approved</strong>.</p>
+          <p>Your employment contract for the position of <strong>${jobTitle}</strong> is now complete and verified.</p>
+          <p>Next steps:</p>
+          <ul style="line-height: 1.8;">
+            <li>Orientation training will be scheduled</li>
+            <li>Deployment assignments will be confirmed</li>
+            <li>You will be added to payroll</li>
+          </ul>
+          <p>Thank you for completing all onboarding requirements. We look forward to working with you!</p>
+          <p>Best regards,<br/><strong>UNDP Human Resources</strong></p>
+        </div>
+      </div>
+    `,
+  }),
+
+  bsafeRejected: (applicantName: string, jobTitle: string, reason: string) => ({
+    subject: `BSAFE Certification - Additional Information Required`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="border-top: 4px solid #ef4444; padding: 20px 0;">
+          <h2 style="color: #ef4444;">BSAFE Certification Review</h2>
+          <p>Dear ${applicantName},</p>
+          <p>Thank you for submitting your BSAFE certification for the position of <strong>${jobTitle}</strong>.</p>
+          <p><strong>Issue:</strong> ${reason}</p>
+          <p>Please address the issue and resubmit your BSAFE certification. You can upload a corrected version through your contract portal.</p>
+          <p>If you have any questions about the requirements, please contact our HR department.</p>
+          <p>Best regards,<br/><strong>UNDP Human Resources</strong></p>
+        </div>
+      </div>
+    `,
+  }),
+
+  contractStatusUpdate: (applicantName: string, jobTitle: string, status: string, message: string) => ({
+    subject: `Contract Status Update - ${jobTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="border-top: 4px solid #1f2937; padding: 20px 0;">
+          <h2>Contract Status Update</h2>
+          <p>Dear ${applicantName},</p>
+          <p>Your employment contract for the position of <strong>${jobTitle}</strong> has been updated.</p>
+          <p><strong>Status:</strong> <span style="background-color: #f0f9ff; padding: 4px 8px; border-radius: 4px; text-transform: capitalize;">${status}</span></p>
+          <p>${message}</p>
+          <p>Best regards,<br/><strong>UNDP Human Resources</strong></p>
+        </div>
+      </div>
+    `,
+  }),
+
+  offerLetterStatusUpdate: (applicantName: string, jobTitle: string, status: string, message: string) => ({
+    subject: `Offer Letter Status Update - ${jobTitle}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="border-top: 4px solid #1f2937; padding: 20px 0;">
+          <h2>Offer Letter Status Update</h2>
+          <p>Dear ${applicantName},</p>
+          <p>Your offer letter for the position of <strong>${jobTitle}</strong> has been updated.</p>
+          <p><strong>Status:</strong> <span style="background-color: #f0f9ff; padding: 4px 8px; border-radius: 4px; text-transform: capitalize;">${status}</span></p>
+          <p>${message}</p>
+          <p>Best regards,<br/><strong>UNDP Human Resources</strong></p>
+        </div>
+      </div>
+    `,
+  }),
 };

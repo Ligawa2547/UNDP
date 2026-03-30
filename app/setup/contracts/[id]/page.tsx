@@ -74,6 +74,12 @@ export default function ContractDetailPage() {
   const [details, setDetails] = useState<ContractDetails | null>(null);
   const [bsafeUpload, setBsafeUpload] = useState<BsafeUpload | null>(null);
   const [loading, setLoading] = useState(true);
+  const [bsafeApproving, setBsafeApproving] = useState(false);
+  const [bsafeReason, setBsafeReason] = useState('');
+  const [bsafeNotes, setBsafeNotes] = useState('');
+  const [statusUpdating, setStatusUpdating] = useState(false);
+  const [newStatus, setNewStatus] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
   useEffect(() => {
     async function fetchData() {
@@ -125,6 +131,81 @@ export default function ContractDetailPage() {
 
     fetchData();
   }, [params.id]);
+
+  const handleBsafeApproval = async (approved: boolean) => {
+    if (!approved && !bsafeReason.trim()) {
+      alert('Please provide a reason for rejection');
+      return;
+    }
+
+    try {
+      setBsafeApproving(true);
+      const contractId = params.id as string;
+
+      const response = await fetch(`/api/contracts/${contractId}/bsafe-approve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          approved,
+          reason: bsafeReason,
+          adminNotes: bsafeNotes,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(`Error: ${data.error || 'Failed to update BSAFE status'}`);
+        return;
+      }
+
+      alert(`BSAFE certification ${approved ? 'approved' : 'rejected'} successfully. Email notification sent to applicant.`);
+      setBsafeReason('');
+      setBsafeNotes('');
+
+      // Refresh the page
+      window.location.reload();
+    } catch (error) {
+      console.error('[v0] Error updating BSAFE status:', error);
+      alert('Failed to update BSAFE status');
+    } finally {
+      setBsafeApproving(false);
+    }
+  };
+
+  const handleContractStatusUpdate = async (status: string) => {
+    try {
+      setStatusUpdating(true);
+
+      const response = await fetch(`/api/contracts/${contract!.id}/update-status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status,
+          message: statusMessage || `Contract status has been updated to ${status}`,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(`Error: ${data.error || 'Failed to update status'}`);
+        return;
+      }
+
+      alert('Contract status updated and email notification sent to applicant.');
+      setNewStatus('');
+      setStatusMessage('');
+
+      // Update local state
+      setContract((prev) => prev ? { ...prev, status } : null);
+    } catch (error) {
+      console.error('[v0] Error updating contract status:', error);
+      alert('Failed to update contract status');
+    } finally {
+      setStatusUpdating(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -297,16 +378,29 @@ export default function ContractDetailPage() {
       {bsafeUpload && (
         <Card>
           <CardHeader>
-            <CardTitle>BSAFE Certification</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>BSAFE Certification</CardTitle>
+              <Badge className={
+                bsafeUpload.file_url?.includes('approved') 
+                  ? 'bg-green-100 text-green-800'
+                  : bsafeUpload.file_url?.includes('rejected')
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-yellow-100 text-yellow-800'
+              }>
+                {bsafeUpload.file_url?.includes('approved') ? 'Approved' : bsafeUpload.file_url?.includes('rejected') ? 'Rejected' : 'Pending'}
+              </Badge>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div>
-              <p className="text-sm text-muted-foreground">File Name</p>
-              <p className="font-medium">{bsafeUpload.file_name}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">File Size</p>
-              <p className="font-medium">{(bsafeUpload.file_size / 1024).toFixed(2)} KB</p>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground">File Name</p>
+                <p className="font-medium">{bsafeUpload.file_name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">File Size</p>
+                <p className="font-medium">{(bsafeUpload.file_size / 1024).toFixed(2)} KB</p>
+              </div>
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Uploaded At</p>
@@ -320,9 +414,99 @@ export default function ContractDetailPage() {
                 })}
               </p>
             </div>
+
+            {/* Admin approval section */}
+            {!bsafeUpload.file_url?.includes('approved') && !bsafeUpload.file_url?.includes('rejected') && (
+              <div className="border-t pt-4 space-y-3">
+                <div>
+                  <label className="text-sm font-medium">Rejection Reason (if declining)</label>
+                  <textarea
+                    value={bsafeReason}
+                    onChange={(e) => setBsafeReason(e.target.value)}
+                    placeholder="e.g., Document is unclear, expired certification, etc."
+                    className="w-full mt-1 p-2 border rounded text-sm"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium">Admin Notes</label>
+                  <textarea
+                    value={bsafeNotes}
+                    onChange={(e) => setBsafeNotes(e.target.value)}
+                    placeholder="Internal notes about this certification..."
+                    className="w-full mt-1 p-2 border rounded text-sm"
+                    rows={2}
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => handleBsafeApproval(true)}
+                    disabled={bsafeApproving}
+                    className="flex-1 bg-green-600 hover:bg-green-700"
+                  >
+                    {bsafeApproving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                    Approve
+                  </Button>
+                  <Button
+                    onClick={() => handleBsafeApproval(false)}
+                    disabled={bsafeApproving || !bsafeReason.trim()}
+                    variant="destructive"
+                    className="flex-1"
+                  >
+                    {bsafeApproving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                    Reject
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
+
+      {/* Update Contract Status */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Update Contract Status</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div>
+            <label className="text-sm font-medium">New Status</label>
+            <select
+              value={newStatus}
+              onChange={(e) => setNewStatus(e.target.value)}
+              className="w-full mt-2 p-2 border rounded"
+            >
+              <option value="">Select a status...</option>
+              <option value="sent">Sent</option>
+              <option value="viewed">Viewed</option>
+              <option value="signed">Signed</option>
+              <option value="bsafe_pending">BSAFE Pending</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="text-sm font-medium">Notification Message</label>
+            <textarea
+              value={statusMessage}
+              onChange={(e) => setStatusMessage(e.target.value)}
+              placeholder="Optional message to include in the email notification..."
+              className="w-full mt-2 p-2 border rounded"
+              rows={3}
+            />
+          </div>
+
+          <Button
+            onClick={() => newStatus && handleContractStatusUpdate(newStatus)}
+            disabled={statusUpdating || !newStatus}
+            className="w-full"
+          >
+            {statusUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+            Update Status & Send Notification
+          </Button>
+        </CardContent>
+      </Card>
 
       {/* Timeline */}
       <Card>
