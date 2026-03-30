@@ -465,81 +465,85 @@ export default function OfferLetterDetailPage() {
 
       {/* View Mode */}
       {!editing && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Offer Letter Details</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2 text-sm">
-              <div>
-                <p className="text-muted-foreground">Applicant</p>
-                <p className="font-semibold">{letter.applicant_name}</p>
-                <p className="text-sm text-muted-foreground">{letter.applicant_email}</p>
+        <>
+          <Card>
+            <CardHeader>
+              <CardTitle>Offer Letter Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 md:grid-cols-2 text-sm">
+                <div>
+                  <p className="text-muted-foreground">Applicant</p>
+                  <p className="font-semibold">{letter.applicant_name}</p>
+                  <p className="text-sm text-muted-foreground">{letter.applicant_email}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Position</p>
+                  <p className="font-semibold">{letter.job_title}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Contract Type</p>
+                  <p className="font-semibold">{letter.contract_type}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Duration</p>
+                  <p className="font-semibold">{letter.contract_duration}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Start Date</p>
+                  <p className="font-semibold">{new Date(letter.expected_start_date).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Acceptance By</p>
+                  <p className="font-semibold">{new Date(letter.acceptance_deadline).toLocaleDateString()}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-muted-foreground">Position</p>
-                <p className="font-semibold">{letter.job_title}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Contract Type</p>
-                <p className="font-semibold">{letter.contract_type}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Duration</p>
-                <p className="font-semibold">{letter.contract_duration}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Start Date</p>
-                <p className="font-semibold">{new Date(letter.expected_start_date).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <p className="text-muted-foreground">Acceptance By</p>
-                <p className="font-semibold">{new Date(letter.acceptance_deadline).toLocaleDateString()}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        {/* Status Update Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Update Offer Letter Status</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div>
-              <Label>New Status</Label>
-              <select
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value)}
-                className="w-full mt-2 p-2 border rounded"
+          <Card>
+            <CardHeader>
+              <CardTitle>Update Offer Letter Status</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <Label>New Status</Label>
+                <select
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value)}
+                  className="w-full mt-2 p-2 border rounded"
+                >
+                  <option value="">Select a status...</option>
+                  <option value="sent">Sent</option>
+                  <option value="viewed">Viewed</option>
+                  <option value="signed">Signed</option>
+                  <option value="accepted">Accepted</option>
+                  <option value="revoked">Revoked</option>
+                </select>
+              </div>
+
+              <div>
+                <Label>Notification Message</Label>
+                <Textarea
+                  value={statusMessage}
+                  onChange={(e) => setStatusMessage(e.target.value)}
+                  placeholder="Optional message to include in the email notification..."
+                  rows={3}
+                />
+              </div>
+
+              <Button
+                onClick={() => newStatus && handleStatusUpdate(newStatus)}
+                disabled={statusUpdating || !newStatus}
+                className="w-full"
               >
-                <option value="">Select a status...</option>
-                <option value="sent">Sent</option>
-                <option value="viewed">Viewed</option>
-                <option value="signed">Signed</option>
-                <option value="accepted">Accepted</option>
-                <option value="revoked">Revoked</option>
-              </select>
-            </div>
-
-            <div>
-              <Label>Notification Message</Label>
-              <Textarea
-                value={statusMessage}
-                onChange={(e) => setStatusMessage(e.target.value)}
-                placeholder="Optional message to include in the email notification..."
-                rows={3}
-              />
-            </div>
-
-            <Button
-              onClick={() => newStatus && handleStatusUpdate(newStatus)}
-              disabled={statusUpdating || !newStatus}
-              className="w-full"
-            >
-              {statusUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              Update Status & Send Notification
-            </Button>
-          </CardContent>
-        </Card>
+                {statusUpdating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Update Status & Send Notification
+              </Button>
+            </CardContent>
+          </Card>
+        </>
       )}
+    </div>
+  );
+}
