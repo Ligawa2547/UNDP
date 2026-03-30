@@ -97,11 +97,12 @@ function OffersQuickCreate({ onSuccess }: OffersQuickCreateProps) {
         onSuccess();
         fetchOffers();
       } else {
+        console.error('[v0] API Error Response:', data);
         alert(`Error: ${data.error || 'Failed to create contract'}`);
       }
     } catch (error) {
-      console.error('[v0] Error:', error);
-      alert('Failed to create contract');
+      console.error('[v0] Error creating contract:', error);
+      alert(`Failed to create contract: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setCreating(null);
     }
@@ -230,11 +231,12 @@ export default function ContractsPage() {
         alert(`Contract created and sent to applicant!\n\nPortal Link: ${window.location.origin}${data.portalLink}`);
         loadContracts();
       } else {
+        console.error('[v0] API Error Response:', data);
         alert(`Error creating contract: ${data.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('[v0] Error creating contract:', error);
-      alert('Failed to create contract. Please try again.');
+      alert(`Failed to create contract: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   };
 

@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (offerError || !offerLetter) {
-      console.error('[v0] Offer letter fetch error:', offerError);
+      console.error('[v0] Offer letter fetch error:', JSON.stringify(offerError, null, 2));
+      console.error('[v0] Offer ID requested:', offerLetterId);
       return NextResponse.json(
         { error: 'Offer letter not found' },
         { status: 404 }
@@ -63,9 +64,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('[v0] Contract creation error:', error);
+      console.error('[v0] Contract creation error:', JSON.stringify(error, null, 2));
+      console.error('[v0] Error details - Message:', error.message);
+      console.error('[v0] Error details - Code:', error.code);
       return NextResponse.json(
-        { error: 'Failed to create contract' },
+        { error: `Failed to create contract: ${error.message || 'Unknown error'}` },
         { status: 500 }
       );
     }
@@ -125,8 +128,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('[v0] Error in contract creation:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to create contract' },
+      { error: `Failed to create contract: ${errorMessage}` },
       { status: 500 }
     );
   }
