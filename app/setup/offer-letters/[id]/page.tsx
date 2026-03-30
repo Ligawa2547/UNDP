@@ -542,4 +542,7 @@ export default function OfferLetterDetailPage() {
             </Button>
           </CardContent>
         </Card>
-      )}
+      </div>
+    );
+  }
+}
