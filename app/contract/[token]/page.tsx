@@ -319,23 +319,41 @@ export default function ContractSignaturePage() {
         signatureData = canvasRef.current.toDataURL();
       }
 
+      console.log('[v0] Attempting to save signature for contract:', contract!.id);
+      
       const { error } = await supabase
         .from('contract_signatures')
         .insert({
           contract_id: contract!.id,
+          signer_name: signerName,
+          signer_email: contract!.applicant_email,
           signature_type: signatureType,
           signature_data: signatureData,
-          signer_name: signerName,
-          signed_at: new Date().toISOString(),
+          signature_date: new Date().toISOString(),
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[v0] Signature insertion error:', error);
+        throw error;
+      }
+
+      console.log('[v0] Signature saved successfully, updating contract status');
 
       // Update contract status
-      await supabase
+      const { error: updateError } = await supabase
         .from('employment_contracts')
-        .update({ status: 'signed', signed_at: new Date().toISOString() })
+        .update({ 
+          status: 'signed', 
+          signed_at: new Date().toISOString() 
+        })
         .eq('id', contract!.id);
+
+      if (updateError) {
+        console.error('[v0] Contract update error:', updateError);
+        throw updateError;
+      }
+
+      console.log('[v0] Contract status updated to signed');
 
       setSigned(true);
       setSavedSignatureData(signatureData);
@@ -345,8 +363,9 @@ export default function ContractSignaturePage() {
       setCompletedSteps(newCompleted);
       setCurrentStep('bsafe-upload');
     } catch (err) {
-      console.error('[v0] Error:', err);
-      alert('Error signing contract');
+      console.error('[v0] Error signing contract:', err);
+      const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+      alert(`Error signing contract: ${errorMsg}`);
     } finally {
       setSigning(false);
     }
