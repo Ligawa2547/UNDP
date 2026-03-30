@@ -1098,14 +1098,25 @@ export default function ContractSignaturePage() {
 
             {/* Completed */}
             {currentStep === 'completed' && (
-              <div className="text-center py-8">
+              <div className="text-center py-8 space-y-4">
                 <Check className="h-12 w-12 text-green-600 mx-auto mb-4" />
-                <p className="text-2xl font-bold mb-2">Onboarding Complete!</p>
-                <p className="text-muted-foreground mb-4">
-                  Your contract and documents have been successfully submitted. We will review your BSAFE certification and contact you soon to schedule your interview.
+                <p className="text-2xl font-bold mb-2">Contract Signing Complete!</p>
+                <p className="text-muted-foreground mb-6">
+                  Your employment contract and BSAFE certification have been successfully submitted.
                 </p>
+                
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <p className="font-semibold text-blue-900 mb-3">Next Steps:</p>
+                  <ul className="text-sm text-blue-800 space-y-2 text-left">
+                    <li>✓ Orientation training will be scheduled</li>
+                    <li>✓ Deployment assignments will be confirmed</li>
+                    <li>✓ You will be added to payroll</li>
+                    <li>✓ HR will contact you with further details</li>
+                  </ul>
+                </div>
+                
                 <Badge className="bg-green-100 text-green-800">
-                  All steps completed
+                  Contract process completed
                 </Badge>
               </div>
             )}
