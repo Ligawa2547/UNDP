@@ -642,31 +642,6 @@ export default function ContractSignaturePage() {
                 </div>
               </div>
             )}
-                  <Button 
-                    onClick={() => window.print()}
-                    variant="outline"
-                    className="w-full"
-                  >
-                    Print Contract
-                  </Button>
-                </div>
-
-                <div className="flex gap-4">
-                  <Button
-                    onClick={() => {
-                      const newCompleted = new Set(completedSteps);
-                      newCompleted.add('contract-review');
-                      setCompletedSteps(newCompleted);
-                      setCurrentStep('bank-details');
-                    }}
-                    className="flex-1"
-                  >
-                    Proceed to Bank Details
-                    <ChevronRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </div>
-              </div>
-            )}
 
             {/* Bank Details */}
             {currentStep === 'bank-details' && (
