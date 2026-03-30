@@ -26,27 +26,33 @@ export async function POST(
       );
     }
 
-    // Validate file type
-    const allowedTypes = ['application/pdf', 'application/msword', 
-                          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                          'image/jpeg', 'image/png'];
+    // Validate file type - Accept PDF and all image formats
+    const allowedTypes = [
+      'application/pdf',
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/svg+xml',
+    ];
     
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Invalid file type. Allowed: PDF, DOC, DOCX, JPG, PNG' },
+        { error: 'Invalid file type. Allowed: PDF, JPG, PNG, GIF, WebP, SVG' },
         { status: 400 }
       );
     }
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
+    // Validate file size (max 20MB)
+    const maxSize = 20 * 1024 * 1024;
+    if (file.size > maxSize) {
       return NextResponse.json(
-        { error: 'File too large. Maximum size is 10MB' },
+        { error: 'File too large. Maximum size is 20MB' },
         { status: 400 }
       );
     }
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Check contract exists
     const { data: contract, error: contractError } = await supabase
@@ -56,48 +62,57 @@ export async function POST(
       .single();
 
     if (contractError || !contract) {
+      console.error('[v0] Contract not found:', contractError);
       return NextResponse.json(
         { error: 'Contract not found' },
         { status: 404 }
       );
     }
 
-    // Convert file to base64 for storage (since we can't use direct blob storage without integration)
+    // Convert file to base64 for preview and storage
     const buffer = await file.arrayBuffer();
     const base64 = Buffer.from(buffer).toString('base64');
+    const dataUrl = `data:${file.type};base64,${base64}`;
 
-    // Store in database
-    const { error: uploadError } = await supabase
+    console.log('[v0] Uploading BSAFE file:', file.name, 'Size:', file.size, 'Type:', file.type);
+
+    // Store in database with file data as base64
+    const { data: uploadData, error: uploadError } = await supabase
       .from('bsafe_uploads')
       .upsert({
         contract_id: contractId,
         file_name: file.name,
-        file_type: file.type,
         file_size: file.size,
-        file_data: base64,
+        file_url: dataUrl, // Store base64 data URL
         uploaded_at: new Date().toISOString(),
       }, {
         onConflict: 'contract_id',
-      });
+      })
+      .select()
+      .single();
 
     if (uploadError) {
       console.error('[v0] Upload error:', uploadError);
       return NextResponse.json(
-        { error: 'Failed to upload file' },
+        { error: `Failed to upload file: ${uploadError.message}` },
         { status: 500 }
       );
     }
+
+    console.log('[v0] BSAFE upload successful');
 
     return NextResponse.json({
       success: true,
       message: 'BSAFE file uploaded successfully',
       fileName: file.name,
+      preview: dataUrl,
     });
 
   } catch (error) {
     console.error('[v0] Error in BSAFE upload:', error);
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to process upload' },
+      { error: `Failed to process upload: ${errorMsg}` },
       { status: 500 }
     );
   }
