@@ -595,6 +595,13 @@ export default function ContractSignaturePage() {
                   </p>
                 </div>
 
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="text-sm font-semibold text-amber-900 mb-2">Important: BSAFE Certification Required</p>
+                  <p className="text-sm text-amber-800">
+                    You will be required to provide your BSAFE certification (Basic Security Awareness in the Field) when signing this contract. Please ensure you have your certification available before proceeding to the signing step.
+                  </p>
+                </div>
+
                 {/* Detailed Contract Display - Print Friendly */}
                 <div className="bg-white border border-slate-200 rounded-lg p-8 space-y-6 print:shadow-none print:border-0">
                   {/* Header */}
