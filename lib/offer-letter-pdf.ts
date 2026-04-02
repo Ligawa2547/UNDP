@@ -109,7 +109,7 @@ export function generateOfferLetterHTML(data: OfferLetterData, isSigned: boolean
       </p>
       <ul style="font-size: 11px; line-height: 1.8; color: #333; margin-left: 20px; margin-bottom: 15px;">
         <li><strong>SSAFE (Staff Safety Awareness and Familiarization Education):</strong> An online induction training mandatory for all UN staff.</li>
-        <li><strong>IFAK 2.0 (Individual First Aid Kit):</strong> Advanced first aid certification to be completed within the first 90 days of employment.</li>
+        <li><strong>IFAK 2.0 (Individual First Aid Kit):</strong> Advanced first aid certification to be completed before your employment start date.</li>
       </ul>
       <p style="font-size: 11px; line-height: 1.6; color: #333; margin-bottom: 10px;">
         <strong>Recognized Training Providers:</strong>
